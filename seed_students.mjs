@@ -29,7 +29,7 @@ const STUDENTS = [
   { grade: 3, cls: 1, name: '김민준', courseId: 'magpie',   goal: '하루에 물 6컵 마시기' },
   { grade: 3, cls: 1, name: '이서연', courseId: 'tiger',    goal: '매일 운동장 두 바퀴 뛰기' },
   { grade: 3, cls: 1, name: '박지호', courseId: 'rabbit',   goal: '하루에 줄넘기 100개 하기' },
-  { grade: 3, cls: 2, name: '최수아', courseId: 'squirrel', goal: '책 15분 이상 읽기' },
+  { grade: 3, cls: 1, name: '최수아', courseId: 'squirrel', goal: '책 15분 이상 읽기' },
   { grade: 4, cls: 1, name: '정우진', courseId: 'magpie',   goal: '아침에 스트레칭 10분 하기' },
   { grade: 4, cls: 1, name: '강하늘', courseId: 'tiger',    goal: '하루 30분 이상 운동하기' },
 ];

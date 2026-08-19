@@ -18,7 +18,7 @@ body{font-family:'Noto Sans KR','Gowun Dodum',sans-serif;background-image:url("d
 @keyframes ycFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes ycPop{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}
 @keyframes cloudDrift{0%{transform:translateX(110vw)}100%{transform:translateX(-60vw)}}
-.yc-cloud{position:fixed;pointer-events:none;z-index:1;mix-blend-mode:screen;animation:cloudDrift linear infinite;will-change:transform;}
+.yc-cloud{position:fixed;pointer-events:none;z-index:1;animation:cloudDrift linear infinite;will-change:transform;filter:drop-shadow(0 2px 10px rgba(255,255,255,.45));}
 input,select,button{font-family:inherit}
 button{cursor:pointer}
 a{color:oklch(42% 0.07 155)}
@@ -34,15 +34,15 @@ a{color:oklch(42% 0.07 155)}
 <body>
 <!-- 구름 레이어 -->
 <img class="yc-cloud" src="./public/구름 그림 1.png" alt=""
-  style="width:340px;top:8%;opacity:0.55;animation-duration:38s;animation-delay:0s;">
+  style="width:380px;top:6%;opacity:0.95;animation-duration:38s;animation-delay:0s;">
 <img class="yc-cloud" src="./public/구름 그림 2.png" alt=""
-  style="width:220px;top:22%;opacity:0.4;animation-duration:52s;animation-delay:-18s;">
+  style="width:260px;top:18%;opacity:0.9;animation-duration:52s;animation-delay:-18s;">
 <img class="yc-cloud" src="./public/구름 그림 1.png" alt=""
-  style="width:280px;top:38%;opacity:0.3;animation-duration:44s;animation-delay:-30s;">
+  style="width:320px;top:32%;opacity:0.85;animation-duration:44s;animation-delay:-30s;">
 <img class="yc-cloud" src="./public/구름 그림 2.png" alt=""
-  style="width:180px;top:55%;opacity:0.25;animation-duration:60s;animation-delay:-8s;">
+  style="width:220px;top:48%;opacity:0.8;animation-duration:60s;animation-delay:-8s;">
 <img class="yc-cloud" src="./public/구름 그림 1.png" alt=""
-  style="width:260px;top:14%;opacity:0.35;animation-duration:48s;animation-delay:-42s;">
+  style="width:300px;top:12%;opacity:0.88;animation-duration:48s;animation-delay:-42s;">
 <div id="root"></div>
 <script type="text/babel">
 // ═══════════════════════════════════════════════════════
@@ -194,7 +194,6 @@ function App() {
 
   // ── Login form ────────────────────────────────────────
   const [loginGrade, setLoginGrade] = useState('');
-  const [loginClass, setLoginClass] = useState('');
 
   // ── Create form ───────────────────────────────────────
   const [newName,   setNewName]   = useState('');
@@ -206,7 +205,6 @@ function App() {
   const [editing,    setEditing]    = useState(false);
   const [saving,     setSaving]     = useState(false);
   const [prevLv,     setPrevLv]     = useState(null);
-  const [achView,    setAchView]    = useState('week');
   const [zCourseId,  setZCourseId]  = useState(null);
   const [zLevel,     setZLevel]     = useState(null);
   const [checkins,   setCheckins]   = useState(new Set()); // date strings for current student
@@ -259,10 +257,16 @@ function App() {
         wm[studentId] = (wm[studentId]||0)+1;
         if (date===todayS){ ts.add(studentId); dm[studentId]=diary||''; }
       });
-      const list = ss.docs.map(d => ({id:d.id,...d.data(),weeklyCount:wm[d.id]||0,checkedToday:ts.has(d.id),todayDiary:dm[d.id]||''}));
-      list.sort((a,b) => a.grade-b.grade || a.cls-b.cls || a.name.localeCompare(b.name,'ko'));
+      const list = ss.docs.map(d => ({id:d.id,...d.data(),cls:1,weeklyCount:wm[d.id]||0,checkedToday:ts.has(d.id),todayDiary:dm[d.id]||''}));
+      list.sort((a,b) => a.grade-b.grade || a.name.localeCompare(b.name,'ko'));
       setStudents(list);
       setLoading(false);
+      const needFix = ss.docs.filter(d => d.data().cls !== 1);
+      if (needFix.length) {
+        const bat = db().batch();
+        needFix.forEach(d => bat.update(d.ref, {cls:1}));
+        bat.commit().catch(e => console.error(e));
+      }
     } catch(e) { setLoadErr(e.message); setLoading(false); }
   }
 
@@ -492,7 +496,7 @@ function App() {
                     <div style={{display:'flex',gap:8}}>
                       <button onClick={()=>{setEditingId(null);setEditForm({});}} style={{...SEC,border:'1px solid oklch(90% 0.015 85)',borderRadius:12,padding:'8px 16px'}}>취소</button>
                       <button onClick={async()=>{
-                        await adminUpdate(s.id,{name:editForm.name,grade:editForm.grade,courseId:editForm.courseId,goal:editForm.goal,points:editForm.points,pin:editForm.pin||''});
+                        await adminUpdate(s.id,{name:editForm.name,grade:editForm.grade,cls:1,courseId:editForm.courseId,goal:editForm.goal,points:editForm.points,pin:editForm.pin||''});
                         setEditingId(null);setEditForm({});
                       }} style={{...PRI('oklch(50% 0.09 155)'),width:'auto',padding:'8px 24px',fontSize:14}}>저장</button>
                     </div>
@@ -708,29 +712,6 @@ function App() {
     {key:'award',    label:'표창장 현황',icon:'award'},
   ];
 
-  // Grass weeks — 시작일이 오늘보다 미래일 경우 오늘 기준 8주 전부터 표시
-  const grassWeeks = [];
-  const grassFrom = new Date(Math.min(PROGRAM_START.getTime(), today.getTime()));
-  let cur2 = new Date(grassFrom);
-  cur2.setDate(cur2.getDate() - cur2.getDay());
-  cur2.setHours(0,0,0,0);
-  const grassEnd = today < PROGRAM_END ? today : PROGRAM_END;
-  while (cur2 <= grassEnd) {
-    const days = [];
-    for (let i=0;i<7;i++){
-      const d = new Date(cur2);
-      const inRange = d<=PROGRAM_END && d<=today;
-      const isT = inRange && sameDay(d,today);
-      const checked = inRange && checkins.has(todayKey(d));
-      days.push({
-        bg: !inRange ? 'transparent' : (checked ? course.color : 'oklch(93% 0.01 85)'),
-        ring: isT ? `0 0 0 2px ${course.dark} inset` : 'none',
-      });
-      cur2.setDate(cur2.getDate()+1);
-    }
-    grassWeeks.push({days});
-  }
-
   // Month calendar
   const monthYear = today.getFullYear(), monthM = today.getMonth();
   const monthDays = [];
@@ -868,40 +849,18 @@ function App() {
                 <div style={{...SURF,borderRadius:24,padding:22,display:'flex',flexDirection:'column',gap:16,gridColumn:'1/-1'}}>
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
                     <div style={{fontSize:16,fontWeight:800}}>도전 달성 현황</div>
-                    <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
-                      <div style={{display:'flex',background:'oklch(95% 0.02 85)',borderRadius:999,padding:4,gap:2}}>
-                        {[['week','주간 잔디'],['month','월간 캘린더']].map(([v,l])=>(
-                          <button key={v} onClick={()=>setAchView(v)} style={{border:'none',borderRadius:999,padding:'7px 16px',fontSize:12.5,fontWeight:700,background:achView===v?'white':'transparent',color:achView===v?course.dark:'oklch(52% 0.02 90)'}}>{l}</button>
-                        ))}
-                      </div>
-                      <div style={{...PILL(course.bg,course.dark)}}>이번주 {Math.min(cur.weeklyCount,4)}/4</div>
-                    </div>
+                    <div style={{...PILL(course.bg,course.dark)}}>이번주 {Math.min(cur.weeklyCount,4)}/4</div>
                   </div>
                   <div style={{fontSize:11.5,color:'oklch(52% 0.02 90)'}}>{weeklyMet?'이번주 목표를 달성했어요! 이 기세를 이어가봐요.':'이번주 4회 이상 도전을 완료하면 캐릭터가 더 잘 자라요.'}</div>
-                  {achView==='week' && (
-                    <div style={{overflowX:'auto',paddingBottom:4}}>
-                      <div style={{display:'flex',gap:5,minWidth:'max-content'}}>
-                        {grassWeeks.map((week,wi)=>(
-                          <div key={wi} style={{display:'flex',flexDirection:'column',gap:5}}>
-                            {week.days.map((d,di)=>(
-                              <div key={di} style={{width:16,height:16,borderRadius:5,background:d.bg,boxShadow:d.ring}}/>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
+                  <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                    <div style={{fontSize:13,fontWeight:800,color:course.dark}}>{monthLabel}</div>
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:6}}>
+                      {WEEKDAY_LABELS.map(w=><div key={w} style={{textAlign:'center',fontSize:11,color:'oklch(52% 0.02 90)',fontWeight:700}}>{w}</div>)}
+                      {monthDays.map((md,i)=>(
+                        <div key={i} style={{aspectRatio:'1',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',background:md.bg,boxShadow:md.ring,fontSize:12,fontWeight:700,color:md.color}}>{md.stamp}</div>
+                      ))}
                     </div>
-                  )}
-                  {achView==='month' && (
-                    <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                      <div style={{fontSize:13,fontWeight:800,color:course.dark}}>{monthLabel}</div>
-                      <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:6}}>
-                        {WEEKDAY_LABELS.map(w=><div key={w} style={{textAlign:'center',fontSize:11,color:'oklch(52% 0.02 90)',fontWeight:700}}>{w}</div>)}
-                        {monthDays.map((md,i)=>(
-                          <div key={i} style={{aspectRatio:'1',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',background:md.bg,boxShadow:md.ring,fontSize:12,fontWeight:700,color:md.color}}>{md.stamp}</div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
               </div>
             )}
