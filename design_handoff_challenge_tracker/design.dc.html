@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&amp;family=Noto+Sans+KR:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  body{margin:0;background:linear-gradient(180deg,#03040c 0%,#0b1638 12%,#173a6e 26%,#2f6fa8 42%,#5aa8d6 58%,#7cc3ea 74%,#a9dcf3 90%,#cfeefb 100%);background-attachment:fixed;font-family:'Gowun Dodum','Noto Sans KR',sans-serif;-webkit-tap-highlight-color:transparent}
+  *{box-sizing:border-box}
+  @keyframes ycFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @keyframes ycPop{0%{transform:scale(0.85);opacity:0}100%{transform:scale(1);opacity:1}}
+  a{color:oklch(42% 0.07 155)}
+  a:hover{color:oklch(52% 0.09 155)}
+  [data-dashgrid]{grid-template-columns:1fr}
+  @media (min-width:800px){[data-dashgrid]{grid-template-columns:1.1fr 1fr}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='300' viewBox='0 0 260 300'%3E%3Ccircle cx='40' cy='24' r='1.2' fill='white'/%3E%3Ccircle cx='190' cy='55' r='1.3' fill='white'/%3E%3Ccircle cx='100' cy='150' r='1' fill='white'/%3E%3Ccircle cx='225' cy='210' r='1.1' fill='white'/%3E%3Ccircle cx='30' cy='260' r='1' fill='white'/%3E%3C/svg%3E&quot;),linear-gradient(180deg,#03040c 0%,#0b1638 12%,#173a6e 26%,#2f6fa8 42%,#5aa8d6 58%,#7cc3ea 74%,#a9dcf3 90%,#cfeefb 100%);background-repeat:repeat-x,no-repeat;background-size:260px 45%,100% 100%;background-position:0 0,0 0;background-attachment:fixed,fixed;color:oklch(32% 0.02 90);position:relative">
+
+<sc-if value="{{ isLoginScreen }}" hint-placeholder-val="{{ true }}">
+<div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 20px; gap: 16px; position: relative">
+  <div style="background:oklch(96% 0.015 80);border-radius:28px;box-shadow:0 12px 32px oklch(40% 0.06 220 / 0.18);padding:32px 28px;display:flex;flex-direction:column;align-items:center;gap:24px;max-width:420px;width:100%">
+  
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+    {{ bigLogo }}
+    <div style="font-family: 'Gowun Dodum',sans-serif; font-size: 30px; color: oklch(38% 0.05 155); text-align: center; line-height: 1.3; text-decoration-line: none; font-weight: 600">영천초등학교<br>도전활동 기록지</div>
+    <div style="font-size:14px;color:oklch(52% 0.02 90)">학년과 반을 입력해주세요</div>
+  </div><div style="display:flex;flex-direction:column;gap:16px;max-width:380px;width:100%">
+    <div style="display:flex;gap:10px">
+      <select onChange="{{ onGradeChange }}" value="{{ loginGrade }}" style="flex:1;border:1.5px solid oklch(90% 0.015 85);border-radius:14px;padding:12px 10px;font-size:14px;font-family:inherit;background:oklch(99% 0.007 85)">
+        <option value="">학년 선택</option>
+        <sc-for list="{{ gradeOptions }}" as="g" hint-placeholder-count="6">
+          <option value="{{ g }}">{{ g }}학년</option>
+        </sc-for>
+      </select>
+      <select onChange="{{ onClassChange }}" value="{{ loginClass }}" style="flex:1;border:1.5px solid oklch(90% 0.015 85);border-radius:14px;padding:12px 10px;font-size:14px;font-family:inherit;background:oklch(99% 0.007 85)">
+        <option value="">반 선택</option>
+        <sc-for list="{{ classOptions }}" as="c" hint-placeholder-count="4">
+          <option value="{{ c }}">{{ c }}반</option>
+        </sc-for>
+      </select>
+    </div>
+    <sc-if value="{{ showNoMatch }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:10px;text-align:center;padding:16px;background:oklch(99% 0.007 85);border-radius:16px;border:1.5px dashed oklch(90% 0.015 85)">
+        <div style="font-size:13px;color:oklch(52% 0.02 90)">해당 학년/반에 등록된 학생이 없어요.</div>
+        <button onClick="{{ onGoCreate }}" style="border:none;border-radius:12px;padding:10px;background:oklch(50% 0.09 155);color:white;font-size:13px;font-weight:700;cursor:pointer">새 프로필 만들기</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ hasMatches }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:12px;font-weight:700;color:oklch(52% 0.02 90)">이름을 선택해주세요</div>
+        <sc-for list="{{ loginStudents }}" as="s" hint-placeholder-count="2">
+          <button onClick="{{ s.onSelect }}" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:18px;border:2px solid oklch(90% 0.015 85);background:oklch(99% 0.007 85);cursor:pointer;text-align:left" style-hover="border-color:{{ s.course.color }}">
+            <div style="width:44px;height:44px;flex:none;border-radius:50%;background:{{ s.course.bg }};display:flex;align-items:center;justify-content:center">{{ s.avatar }}</div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:14.5px">{{ s.name }}</div>
+              <div style="font-size:11.5px;color:{{ s.course.dark }}">{{ s.gradeClass }} · {{ s.stageName }}</div>
+            </div>
+          </button>
+        </sc-for>
+        <button onClick="{{ onGoCreate }}" style="border:1.5px dashed oklch(90% 0.015 85);border-radius:16px;padding:10px;background:none;color:oklch(52% 0.02 90);font-size:12.5px;font-weight:700;cursor:pointer">내 이름이 없나요? 새 프로필 만들기</button>
+      </div>
+    </sc-if>
+  </div>
+  </div>
+  <button onClick="{{ onGoAdmin }}" style="border:none;background:none;color:oklch(60% 0.02 90);font-size:11.5px;cursor:pointer;text-decoration:underline">관리자 페이지</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ isCreateScreen }}" hint-placeholder-val="{{ false }}">
+<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;gap:24px">
+  <div style="background:oklch(96% 0.015 80);border-radius:28px;box-shadow:0 12px 32px oklch(40% 0.06 220 / 0.18);padding:32px 28px;display:flex;flex-direction:column;align-items:center;gap:20px;max-width:460px;width:100%">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+    {{ bigLogo }}
+    <div style="font-family:'Gowun Dodum',sans-serif;font-size:22px;color:oklch(38% 0.05 155)">나만의 도전 캐릭터 만들기</div>
+    <div style="font-size:13px;color:oklch(52% 0.02 90)">캐릭터와 목표를 정하면 도전을 시작할 수 있어요</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:16px;max-width:420px;width:100%">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <label style="font-size:12px;font-weight:700;color:oklch(52% 0.02 90)">이름</label>
+      <input value="{{ newName }}" onChange="{{ onNewNameChange }}" placeholder="이름을 입력해주세요" style="border:1.5px solid oklch(90% 0.015 85);border-radius:14px;padding:12px 14px;font-size:14px;font-family:inherit">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <label style="font-size:12px;font-weight:700;color:oklch(52% 0.02 90)">캐릭터 도감에서 코스를 골라주세요</label>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+        <sc-for list="{{ courseCards }}" as="cc" hint-placeholder-count="4">
+          <button onClick="{{ cc.onClick }}" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:2px solid {{ cc.border }};border-radius:16px;padding:10px 4px;background:{{ cc.bg }};cursor:pointer">
+            <div style="width:52px;height:52px">{{ cc.icon }}</div>
+            <div style="font-size:11.5px;font-weight:700">{{ cc.name }}</div>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <label style="font-size:12px;font-weight:700;color:oklch(52% 0.02 90)">나의 도전 목표</label>
+      <input value="{{ newGoalInput }}" onChange="{{ onNewGoalChange }}" placeholder="예: 하루에 줄넘기 100개 하기" style="border:1.5px solid oklch(90% 0.015 85);border-radius:14px;padding:12px 14px;font-size:14px;font-family:inherit">
+    </div>
+    <button onClick="{{ onSubmitCreate }}" disabled="{{ canSubmitDisabled }}" style="border:none;border-radius:16px;padding:14px;background:{{ submitBtnBg }};color:white;font-size:15px;font-weight:800;cursor:pointer">도전 시작하기</button>
+    <button onClick="{{ onBackToLogin }}" style="border:none;background:none;color:oklch(52% 0.02 90);font-size:12.5px;cursor:pointer">뒤로 가기</button>
+  </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isAdminScreen }}" hint-placeholder-val="{{ false }}">
+<div style="min-height:100vh;padding:32px 24px;display:flex;justify-content:center">
+  <div style="background:oklch(96% 0.015 80);border-radius:28px;box-shadow:0 12px 32px oklch(40% 0.06 220 / 0.18);padding:28px;display:flex;flex-direction:column;gap:18px;max-width:1000px;width:100%;align-self:flex-start">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      {{ smallLogo }}
+      <div style="font-size:18px;font-weight:800;font-family:'Gowun Dodum',sans-serif;color:oklch(38% 0.05 155)">관리자 페이지 · 전체 도전 현황</div>
+    </div>
+    <button onClick="{{ onExitAdmin }}" style="border:1px solid oklch(90% 0.015 85);background:oklch(99% 0.007 85);border-radius:12px;padding:8px 16px;font-size:12.5px;font-weight:700;color:oklch(40% 0.02 90);cursor:pointer">학생 화면으로</button>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <select onChange="{{ onAdminGradeChange }}" value="{{ adminGrade }}" style="border:1.5px solid oklch(90% 0.015 85);border-radius:12px;padding:9px 10px;font-size:13px;font-family:inherit;background:oklch(99% 0.007 85)">
+      <option value="">전체 학년</option>
+      <sc-for list="{{ adminGradeOptions }}" as="g" hint-placeholder-count="6">
+        <option value="{{ g }}">{{ g }}학년</option>
+      </sc-for>
+    </select>
+    <select onChange="{{ onAdminClassChange }}" value="{{ adminClass }}" style="border:1.5px solid oklch(90% 0.015 85);border-radius:12px;padding:9px 10px;font-size:13px;font-family:inherit;background:oklch(99% 0.007 85)">
+      <option value="">전체 반</option>
+      <sc-for list="{{ adminClassOptions }}" as="c" hint-placeholder-count="4">
+        <option value="{{ c }}">{{ c }}반</option>
+      </sc-for>
+    </select>
+    <div style="font-size:12.5px;color:oklch(52% 0.02 90);font-weight:700">총 {{ adminCount }}명</div>
+    <div style="flex:1"></div>
+    <div style="display:flex;background:oklch(95% 0.02 85);border-radius:999px;padding:4px;gap:2px">
+      <button onClick="{{ onSetAdminTable }}" style="border:none;border-radius:999px;padding:7px 16px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ adminTableTabBg }};color:{{ adminTableTabColor }}">표로 보기</button>
+      <button onClick="{{ onSetAdminGrid }}" style="border:none;border-radius:999px;padding:7px 16px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ adminGridTabBg }};color:{{ adminGridTabColor }}">그리드로 보기</button>
+    </div>
+  </div>
+  <sc-if value="{{ isAdminTableView }}" hint-placeholder-val="{{ true }}">
+  <div style="background:oklch(99% 0.007 85);border:1px solid oklch(90% 0.015 85);border-radius:20px;overflow:hidden">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 0.8fr 0.8fr 0.8fr;padding:12px 16px;background:oklch(94% 0.02 85);font-size:11.5px;font-weight:800;color:oklch(45% 0.02 90)">
+      <div>이름</div><div>학년/반</div><div>코스</div><div>단계</div><div>이번주</div><div>연속</div><div>오늘</div>
+    </div>
+    <sc-for list="{{ adminRows }}" as="r" hint-placeholder-count="8">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 0.8fr 0.8fr 0.8fr;padding:12px 16px;border-top:1px solid oklch(94% 0.01 85);font-size:13px;align-items:center">
+        <div style="font-weight:700">{{ r.name }}</div>
+        <div style="color:oklch(52% 0.02 90)">{{ r.gradeClass }}</div>
+        <div style="display:flex;align-items:center;gap:6px"><div style="width:8px;height:8px;border-radius:50%;background:{{ r.courseColor }}"></div>{{ r.courseName }}</div>
+        <div>{{ r.stageName }}</div>
+        <div>{{ r.weekly }}</div>
+        <div>{{ r.streak }}</div>
+        <div style="color:{{ r.todayColor }};font-weight:700">{{ r.todayLabel }}</div>
+      </div>
+    </sc-for>
+  </div>
+  </sc-if>
+  <sc-if value="{{ isAdminGridView }}" hint-placeholder-val="{{ false }}">
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px">
+    <sc-for list="{{ adminRows }}" as="r" hint-placeholder-count="8">
+      <div style="background:{{ r.courseBg }};border-radius:20px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">
+        <div style="width:64px;height:64px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center">{{ r.avatar }}</div>
+        <div style="font-weight:700;font-size:13.5px">{{ r.name }}</div>
+        <div style="font-size:11px;color:oklch(52% 0.02 90)">{{ r.gradeClass }}</div>
+        <div style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:white;color:{{ r.courseColor }}">{{ r.stageName }}</div>
+        <div style="font-size:11px;color:{{ r.todayColor }};font-weight:700">오늘 {{ r.todayLabel }} · 이번주 {{ r.weekly }}</div>
+      </div>
+    </sc-for>
+  </div>
+  </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isAppScreen }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;min-height:100vh">
+
+  <sc-if value="{{ showSidebar }}" hint-placeholder-val="{{ true }}">
+  <div style="width:216px;flex:none;background:oklch(99% 0.007 85);border-right:1px solid oklch(90% 0.015 85);padding:24px 16px;display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;align-items:center;gap:8px;padding:0 8px 20px">
+      {{ smallLogo }}
+      <div style="font-family:'Gowun Dodum',sans-serif;font-weight:700;font-size:14px;color:oklch(38% 0.05 155);line-height:1.25">영천초 도전활동<br>기록지</div>
+    </div>
+    <sc-for list="{{ navItems }}" as="item" hint-placeholder-count="4">
+      <button onClick="{{ item.onClick }}" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;border:none;background:{{ item.activeBg }};color:{{ item.activeColor }};font-size:14px;font-weight:700;cursor:pointer;text-align:left" style-hover="background:oklch(94% 0.03 155)">
+        {{ item.icon }}
+        <span>{{ item.label }}</span>
+      </button>
+    </sc-for>
+    <div style="flex:1"></div>
+    <button onClick="{{ onSwitchStudent }}" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;border:1px dashed oklch(90% 0.015 85);background:none;color:oklch(52% 0.02 90);font-size:13px;cursor:pointer">
+      {{ switchIcon }} <span>다른 학생으로</span>
+    </button>
+  </div>
+  </sc-if>
+
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column;padding-bottom:{{ contentBottomPad }}">
+    <div style="background:oklch(99% 0.007 85);border-bottom:1px solid oklch(90% 0.015 85);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:10px">
+        <sc-if value="{{ showSidebar }}" hint-placeholder-val="{{ true }}"><span></span></sc-if>
+        <sc-if value="{{ showTopLogo }}" hint-placeholder-val="{{ false }}">{{ smallLogo }}</sc-if>
+        <div style="font-size:18px;font-weight:800;font-family:'Gowun Dodum',sans-serif;color:oklch(38% 0.05 155)">{{ screenTitle }}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;background:{{ curCourseBg }};padding:8px 16px 8px 8px;border-radius:999px">
+        <div style="width:38px;height:38px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center">{{ headerAvatar }}</div>
+        <div style="line-height:1.25">
+          <div style="font-size:13px;font-weight:800">{{ curStudent.name }} 학생 · {{ curStudent.gradeClass }}</div>
+          <div style="font-size:11px;color:{{ curCourseDark }}">{{ curStudent.stageName }} · 누적 {{ curStudent.totalSuccess }}회 성공</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:1;padding:24px;display:flex;justify-content:center">
+    <div style="background:oklch(96% 0.015 80);border-radius:28px;box-shadow:0 12px 32px oklch(40% 0.06 220 / 0.18);padding:28px;display:flex;flex-direction:column;gap:20px;max-width:1080px;width:100%;align-self:flex-start">
+
+      <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;gap:20px" data-dashgrid="1">
+          <div style="background: oklch(99% 0.007 85); border-radius: 24px; padding: 22px; border: 1px solid oklch(90% 0.015 85); display: flex; flex-direction: column; gap: 14px">
+            <div style="font-size:16px;font-weight:800">오늘의 도전을 완료했나요?</div>
+            <div style="font-size:12.5px;font-weight:700;color:{{ curCourseDark }};background:{{ curCourseBg }};padding:8px 12px;border-radius:12px">오늘의 목표 · {{ curStudent.goal }}</div>
+            <sc-if value="{{ checkinSaved }}" hint-placeholder-val="{{ false }}">
+              <div style="background:oklch(94% 0.03 155);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;gap:8px;color:oklch(42% 0.07 155);font-weight:700;font-size:14px">{{ checkIconGreen }} 오늘도 완료했어요!</div>
+                <div style="font-size:13px;color:oklch(32% 0.02 90);line-height:1.5"><b>한 줄 기록</b> · {{ savedDiary }}</div>
+                <button onClick="{{ onEditCheckin }}" style="align-self:flex-start;display:flex;align-items:center;gap:6px;background:white;border:1px solid oklch(90% 0.015 85);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;color:oklch(42% 0.07 155);cursor:pointer">{{ editIcon }} 수정하기</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ showCheckinForm }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <label style="font-size:12px;font-weight:700;color:oklch(52% 0.02 90)">오늘의 느낀 점 (한 줄 일기)</label>
+                <input value="{{ diaryInput }}" onChange="{{ onDiaryChange }}" placeholder="예: 생각보다 재미있었다!" style="border:1.5px solid oklch(90% 0.015 85);border-radius:14px;padding:12px 14px;font-size:14px;font-family:inherit">
+                <button onClick="{{ onSaveCheckin }}" disabled="{{ saveDisabled }}" style="margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;background:{{ saveBtnBg }};color:white;border:none;border-radius:16px;padding:14px;font-size:15px;font-weight:800;cursor:pointer">{{ checkIconWhite }} {{ saveBtnLabel }}</button>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="background:oklch(99% 0.007 85);border-radius:24px;padding:22px;border:1px solid oklch(90% 0.015 85);display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div style="font-size:16px;font-weight:800">내 캐릭터 성장 존</div>
+              <div style="font-size:11px;font-weight:700;padding:4px 12px;border-radius:999px;background:{{ curCourseBg }};color:{{ curCourseDark }}">{{ curCourse.name }} 코스</div>
+            </div>
+            <div style="display:flex;gap:16px;align-items:center">
+              <div style="width:104px;height:104px;flex:none;border-radius:24px;background:{{ previewLocked_bg }};display:flex;align-items:center;justify-content:center;filter:{{ previewFilter }};animation:ycFloat 3s ease-in-out infinite">{{ previewIllustration }}</div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+                <div style="font-size:15px;font-weight:800">{{ previewStageName }}</div>
+                <div style="font-size:12.5px;color:oklch(52% 0.02 90);line-height:1.5">{{ previewDesc }}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;justify-content:space-between">
+              <sc-for list="{{ stageStepper }}" as="st" hint-placeholder-count="5">
+                <button onClick="{{ st.onClick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;cursor:pointer;padding:4px">
+                  <div style="width:36px;height:36px;border-radius:12px;background:{{ st.dotBg }};border:2px solid {{ st.dotBorder }};display:flex;align-items:center;justify-content:center">{{ st.dotIcon }}</div>
+                  <div style="font-size:10px;color:{{ st.labelColor }};font-weight:700">{{ st.level }}단계</div>
+                </button>
+              </sc-for>
+            </div>
+            <div style="background:oklch(95% 0.04 95);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:6px">
+              <div style="font-size:12.5px;font-weight:700;color:oklch(55% 0.1 80)">{{ growthGuideLine }}</div>
+              <div style="height:8px;border-radius:999px;background:oklch(90% 0.015 85);overflow:hidden"><div style="height:100%;border-radius:999px;background:{{ curCourseColor }};width:{{ growthBarPct }}"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:oklch(99% 0.007 85);border-radius:24px;padding:22px;border:1px solid oklch(90% 0.015 85);display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+            <div style="font-size:16px;font-weight:800">도전 달성 현황</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div style="display:flex;background:oklch(95% 0.02 85);border-radius:999px;padding:4px;gap:2px">
+                <button onClick="{{ onSetWeekView }}" style="border:none;border-radius:999px;padding:7px 16px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ weekTabBg }};color:{{ weekTabColor }}">주간 잔디</button>
+                <button onClick="{{ onSetMonthView }}" style="border:none;border-radius:999px;padding:7px 16px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ monthTabBg }};color:{{ monthTabColor }}">월간 캘린더</button>
+              </div>
+              <div style="font-size:12.5px;font-weight:800;color:{{ curCourseDark }};background:{{ curCourseBg }};padding:7px 14px;border-radius:999px">이번주 {{ weeklyRatio }}</div>
+            </div>
+          </div>
+          <div style="font-size:11.5px;color:oklch(52% 0.02 90)">{{ weeklyGuideLine }}</div>
+
+          <sc-if value="{{ isWeekView }}" hint-placeholder-val="{{ true }}">
+            <div style="overflow-x:auto;padding-bottom:4px">
+              <div style="display:flex;gap:5px;min-width:max-content">
+                <sc-for list="{{ grassWeeks }}" as="week" hint-placeholder-count="10">
+                  <div style="display:flex;flex-direction:column;gap:5px">
+                    <sc-for list="{{ week.days }}" as="d" hint-placeholder-count="7">
+                      <div style="width:16px;height:16px;border-radius:5px;background:{{ d.bg }};box-shadow:{{ d.ring }}"></div>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isMonthView }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="font-size:13px;font-weight:800;color:{{ curCourseDark }}">{{ monthLabel }}</div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">
+                <sc-for list="{{ weekdayLabels }}" as="wl" hint-placeholder-count="7">
+                  <div style="text-align:center;font-size:11px;color:oklch(52% 0.02 90);font-weight:700">{{ wl }}</div>
+                </sc-for>
+                <sc-for list="{{ monthDays }}" as="md" hint-placeholder-count="35">
+                  <div style="aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;background:{{ md.bg }};box-shadow:{{ md.ring }};font-size:12px;font-weight:700;color:{{ md.color }}">{{ md.stamp }}</div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:0.9fr 1.4fr;gap:20px" data-profgrid="1">
+          <div style="background:{{ curCourseBg }};border-radius:24px;padding:26px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
+            <div style="width:110px;height:110px;border-radius:32px;background:white;display:flex;align-items:center;justify-content:center">{{ profileIllustration }}</div>
+            <div style="font-size:20px;font-weight:800">{{ curStudent.name }}</div>
+            <div style="font-size:13px;color:{{ curCourseDark }}">{{ curStudent.gradeClass }} · {{ curCourse.name }} 코스</div>
+            <div style="font-size:12px;font-weight:700;padding:5px 14px;border-radius:999px;background:white;color:{{ curCourseDark }}">{{ curStudent.stageName }}</div>
+            <div style="font-size:11.5px;color:oklch(52% 0.02 90);margin-top:6px">{{ curStudent.joinDateLabel }}</div>
+            <div style="font-size:11px;color:oklch(52% 0.02 90);background:white;border-radius:12px;padding:8px 12px;line-height:1.5">코스는 학기 중에는 바꿀 수 없어요. 끝까지 함께 키워봐요!</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px" data-statgrid="1">
+              <sc-for list="{{ profileStats }}" as="stat" hint-placeholder-count="4">
+                <div style="background:oklch(99% 0.007 85);border:1px solid oklch(90% 0.015 85);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:4px">
+                  <div style="font-size:11.5px;color:oklch(52% 0.02 90);font-weight:700">{{ stat.label }}</div>
+                  <div style="font-size:22px;font-weight:800;font-family:'Gowun Dodum',sans-serif;color:{{ curCourseDark }}">{{ stat.value }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="background:oklch(99% 0.007 85);border:1px solid oklch(90% 0.015 85);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px">
+              <div style="font-size:14.5px;font-weight:800">지난 도전 일기</div>
+              <sc-for list="{{ curStudent.diaryHistory }}" as="entry" hint-placeholder-count="3">
+                <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid oklch(94% 0.01 85)">
+                  <div style="font-size:11.5px;font-weight:700;color:oklch(52% 0.02 90);flex:none;width:64px">{{ entry.date }}</div>
+                  <div style="font-size:13px;line-height:1.5">{{ entry.text }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isZoo }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px" data-zoogrid="1">
+          <div style="background:oklch(99% 0.007 85);border-radius:24px;padding:20px;border:1px solid oklch(90% 0.015 85);display:flex;flex-direction:column;gap:16px">
+            <div style="font-size:16px;font-weight:800">캐릭터 도감</div>
+            <sc-for list="{{ zooCourses }}" as="zc" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <button onClick="{{ zc.onSelectCourse }}" style="display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;padding:0;align-self:flex-start">
+                  <div style="width:10px;height:10px;border-radius:50%;background:{{ zc.color }}"></div>
+                  <div style="font-size:13.5px;font-weight:800;color:{{ zc.nameColor }}">{{ zc.name }} 코스</div>
+                </button>
+                <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+                  <sc-for list="{{ zc.stages }}" as="stg" hint-placeholder-count="5">
+                    <button onClick="{{ stg.onClick }}" style="border:2px solid {{ stg.border }};border-radius:16px;padding:8px 4px;background:{{ stg.bg }};cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+                      <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;filter:{{ stg.filter }}">{{ stg.icon }}</div>
+                      <div style="font-size:9.5px;font-weight:700;color:{{ stg.textColor }}">{{ stg.shortName }}</div>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="background:{{ zooPreviewBg }};border-radius:24px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;justify-content:center">
+            <div style="width:130px;height:130px;display:flex;align-items:center;justify-content:center;filter:{{ zooPreviewFilter }};animation:ycPop 0.25s ease">{{ zooPreviewIllustration }}</div>
+            <div style="font-size:17px;font-weight:800">{{ zooPreviewTitle }}</div>
+            <div style="font-size:12.5px;color:oklch(52% 0.02 90);line-height:1.6;max-width:260px">{{ zooPreviewDesc }}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isAward }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;justify-content:center;padding:20px 0">
+          <div style="width:100%;max-width:460px;background:oklch(99% 0.007 85);border-radius:28px;border:3px solid {{ awardBorder }};padding:32px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;filter:{{ awardFilter }}">
+            <div style="width:96px;height:96px;display:flex;align-items:center;justify-content:center">{{ awardIcon }}</div>
+            <div style="font-size:12px;font-weight:700;color:oklch(55% 0.1 80);letter-spacing:2px">CERTIFICATE OF ACHIEVEMENT</div>
+            <div style="font-size:22px;font-weight:800;font-family:'Gowun Dodum',sans-serif;color:oklch(38% 0.05 155)">{{ awardTitle }}</div>
+            <div style="font-size:14px;line-height:1.7;color:oklch(32% 0.02 90)">{{ awardBody }}</div>
+            <div style="font-size:12px;color:oklch(52% 0.02 90);margin-top:6px">{{ awardDate }}</div>
+            <div style="font-size:12px;font-weight:800;color:oklch(38% 0.05 155)">영천초등학교장</div>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+    </div>
+  </div>
+
+  <sc-if value="{{ showBottomTab }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;bottom:0;left:0;right:0;background:oklch(99% 0.007 85);border-top:1px solid oklch(90% 0.015 85);display:flex;justify-content:space-around;padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px))">
+    <sc-for list="{{ navItems }}" as="item" hint-placeholder-count="4">
+      <button onClick="{{ item.onClick }}" style="display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;padding:6px 10px;cursor:pointer;color:{{ item.activeColor }}">
+        {{ item.icon }}
+        <span style="font-size:10.5px;font-weight:700">{{ item.label }}</span>
+      </button>
+    </sc-for>
+  </div>
+  </sc-if>
+
+</div>
+</sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const COURSES = [
+  {id:'magpie', name:'까치', color:'oklch(64% 0.1 155)', bg:'oklch(94% 0.035 155)', dark:'oklch(40% 0.08 155)'},
+  {id:'tiger', name:'호랑이', color:'oklch(72% 0.14 55)', bg:'oklch(94% 0.05 55)', dark:'oklch(46% 0.11 45)'},
+  {id:'rabbit', name:'토끼', color:'oklch(80% 0.1 15)', bg:'oklch(95% 0.035 15)', dark:'oklch(50% 0.1 15)'},
+  {id:'squirrel', name:'다람쥐', color:'oklch(70% 0.09 65)', bg:'oklch(94% 0.035 65)', dark:'oklch(44% 0.08 60)'},
+];
+const GOLD = 'oklch(78% 0.13 85)';
+const GOLD_DARK = 'oklch(52% 0.1 80)';
+const STAGE_NAMES = ['알', '새싹 친구', '씩씩한 친구', '늠름한 친구', '반짝이는 최종 친구'];
+const STAGE_DESC = [
+  '아직 알 속에 있어요. 매일 도전을 실천하면 곧 태어날 거예요!',
+  '드디어 태어났어요! 작고 여린 새싹 친구예요.',
+  '조금씩 튼튼해지고 있어요. 씩씩한 친구가 되었어요!',
+  '이제 제법 늠름해요. 최종 단계가 눈앞이에요!',
+  '반짝반짝, 최종 단계에 도착했어요! 정말 대단해요.',
+];
+const THRESHOLDS = [0, 8, 20, 36, 60];
+const WEEKDAY_LABELS = ['일','월','화','수','목','금','토'];
+const PROGRAM_START = new Date(2026, 7, 27);
+const PROGRAM_END = new Date(2026, 11, 24);
+const DEMO_TODAY = new Date(2026, 9, 15);
+
+function courseOf(id){ return COURSES.find(c => c.id === id); }
+function levelOf(points){ return THRESHOLDS.filter(t => points >= t).length; }
+function fmtDate(d){ return (d.getMonth()+1) + '.' + d.getDate(); }
+function isCheckedDate(d){
+  if (d < PROGRAM_START || d > DEMO_TODAY) return false;
+  const n = d.getDate() + d.getMonth() * 31;
+  return ((n * 7 + 3) % 10) < 6;
+}
+function sameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+
+const STUDENT_NAMES = ['김도윤','박서아','이준서','정하은','최유진','강민준','윤서윤','임하준','한지우','오세윤','신유나','배준혁','조은서','장태윤','문서준','노아인'];
+const STUDENT_POINTS = [4,12,26,42,62,3,18,33,55,68,9,24,38,50,6,30];
+const DIARY_TEMPLATES = [
+  '오늘 도전을 완료했다. 생각보다 뿌듯했다.',
+  '조금 힘들었지만 끝까지 해냈다!',
+  '친구와 같이 하니 더 재미있었다.',
+  '매일 하다 보니 이제 습관이 된 것 같다.',
+];
+const GOAL_TEMPLATES = {
+  rabbit: ['하루에 줄넘기 100개 하기', '매일 방 정리 5분 하기'],
+  tiger: ['매일 운동장 두 바퀴 뛰기', '하루 30분 이상 운동하기'],
+  squirrel: ['책 15분 이상 읽기', '매일 영어 단어 5개 외우기'],
+  magpie: ['하루에 물 6컵 마시기', '아침에 스트레칭 10분 하기'],
+};
+const STUDENTS_SEED = [];
+(function(){
+  const courseOrder = ['rabbit','tiger','squirrel','magpie'];
+  let idx = 0;
+  for (let cls = 1; cls <= 4; cls++){
+    for (let k = 0; k < 4; k++){
+      const points = STUDENT_POINTS[idx];
+      const courseId = courseOrder[k];
+      STUDENTS_SEED.push({
+        name: STUDENT_NAMES[idx], grade: 3, cls,
+        courseId, points, goal: GOAL_TEMPLATES[courseId][idx % 2],
+        weeklyCount: (idx % 4) + 1,
+        streak: Math.max(1, Math.round(points / 3)),
+        diaryHistory: [
+          {date:'10.'+ (10+(idx%5)), text: DIARY_TEMPLATES[idx % DIARY_TEMPLATES.length]},
+          {date:'10.'+ (7+(idx%5)), text: DIARY_TEMPLATES[(idx+1) % DIARY_TEMPLATES.length]},
+        ],
+      });
+      idx++;
+    }
+  }
+})();
+
+class Component extends DCLogic {
+  state = {
+    screen: 'login',
+    studentIndex: null,
+    viewportWidth: (typeof window !== 'undefined') ? window.innerWidth : 1280,
+    students: STUDENTS_SEED.map(s => ({...s, checkedToday:false, todayDiary:''})),
+    diaryInput: '',
+    previewLevel: null,
+    achievementView: 'week',
+    zooCourseId: null, zooLevel: null,
+    loginGrade: '', loginClass: '',
+    newName: '', newCourseId: null, newGoalInput: '',
+    adminMode: false, adminGrade: '', adminClass: '', adminView: 'table',
+  };
+
+  componentDidMount(){
+    this._onResize = () => this.setState({ viewportWidth: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+  }
+  componentWillUnmount(){ window.removeEventListener('resize', this._onResize); }
+
+  icon(name, size, color){
+    size = size || 20; color = color || 'currentColor';
+    const common = {width:size, height:size, viewBox:'0 0 100 100', fill:'none', stroke:color, strokeWidth:8, strokeLinecap:'round', strokeLinejoin:'round', key:name};
+    const el = (tag, props, ...children) => React.createElement(tag, props, ...children);
+    switch(name){
+      case 'home': return el('svg', common, el('polyline',{key:'r',points:'14,52 50,18 86,52'}), el('rect',{key:'b',x:26,y:50,width:48,height:36,rx:4}));
+      case 'user': return el('svg', common, el('circle',{key:'h',cx:50,cy:32,r:16}), el('path',{key:'b',d:'M18,86 Q50,54 82,86'}));
+      case 'book': return el('svg', common, el('path',{key:'l',d:'M50,26 C40,18 24,18 14,22 L14,80 C24,76 40,76 50,84'}), el('path',{key:'r2',d:'M50,26 C60,18 76,18 86,22 L86,80 C76,76 60,76 50,84'}));
+      case 'award': return el('svg', common, el('circle',{key:'c',cx:50,cy:36,r:22}), el('polyline',{key:'l1',points:'36,54 26,88 50,76'}), el('polyline',{key:'l2',points:'64,54 74,88 50,76'}));
+      case 'check': return el('svg', common, el('polyline',{key:'p',points:'20,52 42,74 82,26'}));
+      case 'edit': return el('svg', common, el('line',{key:'l',x1:22,y1:78,x2:66,y2:34}), el('polygon',{key:'t',points:'66,34 82,18 88,24 72,40'}), el('line',{key:'u',x1:16,y1:88,x2:32,y2:88}));
+      case 'lock': return el('svg', common, el('rect',{key:'b',x:24,y:46,width:52,height:42,rx:8}), el('path',{key:'s',d:'M32,46 L32,32 Q32,14 50,14 Q68,14 68,32 L68,46'}));
+      case 'switch': return el('svg', common, el('polyline',{key:'a',points:'34,20 58,20 58,44'}), el('line',{key:'l1',x1:58,y1:20,x2:20,y2:58}), el('polyline',{key:'b',points:'66,80 42,80 42,56'}), el('line',{key:'l2',x1:42,y1:80,x2:80,y2:42}));
+      default: return el('svg', common, el('circle',{key:'c',cx:50,cy:50,r:6,fill:color}));
+    }
+  }
+
+  charSvg(course, level, size, key){
+    size = size || 110;
+    const gold = level >= 5;
+    const body = gold ? GOLD : course.color;
+    const kids = [];
+    if (level <= 1){
+      kids.push(React.createElement('ellipse',{key:'egg',cx:60,cy:70,rx:32,ry:38,fill:body}));
+      kids.push(React.createElement('circle',{key:'sp1',cx:48,cy:58,r:4,fill:course.dark,opacity:0.35}));
+      kids.push(React.createElement('circle',{key:'sp2',cx:70,cy:72,r:3.5,fill:course.dark,opacity:0.35}));
+      kids.push(React.createElement('circle',{key:'sp3',cx:56,cy:88,r:3,fill:course.dark,opacity:0.35}));
+    } else {
+      if (gold) kids.push(React.createElement('circle',{key:'glow',cx:60,cy:64,r:52,fill:GOLD,opacity:0.18}));
+      if (course.id === 'squirrel') kids.push(React.createElement('ellipse',{key:'tail',cx:92,cy:50,rx:16,ry:24,fill:body,transform:'rotate(-25 92 50)'}));
+      if (course.id === 'magpie'){
+        kids.push(React.createElement('ellipse',{key:'wl',cx:24,cy:66,rx:12,ry:18,fill:course.dark,opacity:0.7}));
+        kids.push(React.createElement('ellipse',{key:'wr',cx:96,cy:66,rx:12,ry:18,fill:course.dark,opacity:0.7}));
+      }
+      kids.push(React.createElement('ellipse',{key:'body',cx:60,cy:70,rx:36,ry:32,fill:body}));
+      if (course.id === 'rabbit'){
+        kids.push(React.createElement('ellipse',{key:'e1',cx:44,cy:28,rx:7,ry:20,fill:body,transform:'rotate(-8 44 28)'}));
+        kids.push(React.createElement('ellipse',{key:'e2',cx:76,cy:28,rx:7,ry:20,fill:body,transform:'rotate(8 76 28)'}));
+      } else if (course.id === 'tiger'){
+        kids.push(React.createElement('polygon',{key:'e1',points:'34,44 46,44 38,24',fill:body}));
+        kids.push(React.createElement('polygon',{key:'e2',points:'86,44 74,44 82,24',fill:body}));
+      } else if (course.id === 'squirrel'){
+        kids.push(React.createElement('circle',{key:'e1',cx:40,cy:34,r:9,fill:body}));
+        kids.push(React.createElement('circle',{key:'e2',cx:80,cy:34,r:9,fill:body}));
+      } else if (course.id === 'magpie'){
+        kids.push(React.createElement('polygon',{key:'beak',points:'52,80 68,80 60,92',fill:course.dark}));
+      }
+      kids.push(React.createElement('circle',{key:'eyeL',cx:48,cy:66,r:4.5,fill:'oklch(30% 0.02 90)'}));
+      kids.push(React.createElement('circle',{key:'eyeR',cx:72,cy:66,r:4.5,fill:'oklch(30% 0.02 90)'}));
+      kids.push(React.createElement('circle',{key:'ck1',cx:38,cy:78,r:6,fill:'oklch(78% 0.1 30)',opacity:0.5}));
+      kids.push(React.createElement('circle',{key:'ck2',cx:82,cy:78,r:6,fill:'oklch(78% 0.1 30)',opacity:0.5}));
+      if (level >= 3){
+        kids.push(React.createElement('ellipse',{key:'ft1',cx:46,cy:102,rx:9,ry:7,fill:body}));
+        kids.push(React.createElement('ellipse',{key:'ft2',cx:74,cy:102,rx:9,ry:7,fill:body}));
+      }
+      if (level >= 4){
+        kids.push(React.createElement('rect',{key:'band',x:28,y:56,width:64,height:11,rx:5,fill:'oklch(78% 0.1 30)',transform:'rotate(-4 60 62)'}));
+        kids.push(React.createElement('polygon',{key:'knot',points:'88,56 100,62 88,68',fill:'oklch(52% 0.11 30)'}));
+      }
+      if (level >= 5){
+        kids.push(React.createElement('polygon',{key:'crown',points:'42,20 48,4 54,18 60,2 66,18 72,4 78,20',fill:GOLD,stroke:GOLD_DARK,strokeWidth:2}));
+        kids.push(React.createElement('polygon',{key:'sp1',points:'12,40 16,32 20,40 16,48',fill:GOLD}));
+        kids.push(React.createElement('polygon',{key:'sp2',points:'104,54 108,46 112,54 108,62',fill:GOLD}));
+        kids.push(React.createElement('polygon',{key:'sp3',points:'18,92 22,84 26,92 22,100',fill:GOLD}));
+      }
+    }
+    return React.createElement('svg',{viewBox:'0 0 120 120', width:size, height:size, key:key}, kids);
+  }
+
+  renderVals(){
+    const s = this.state;
+    const isMobile = s.viewportWidth < 800;
+    const students = s.students;
+    const cur = s.studentIndex !== null ? students[s.studentIndex] : null;
+    if (s.adminMode){
+      const gradeSel = s.adminGrade, classSel = s.adminClass;
+      const rows = students.filter(st =>
+        (!gradeSel || String(st.grade) === String(gradeSel)) &&
+        (!classSel || String(st.cls) === String(classSel))
+      ).map((st, i) => {
+        const c = courseOf(st.courseId);
+        const lv = levelOf(st.points);
+        return {
+          name: st.name, gradeClass: st.grade+'학년 '+st.cls+'반', courseName: c.name, courseColor: c.color, courseBg: c.bg,
+          stageName: STAGE_NAMES[lv-1], points: st.points, weekly: Math.min(st.weeklyCount,4)+'/4',
+          streak: st.streak+'일', todayLabel: st.checkedToday ? '완료' : '미완료',
+          todayColor: st.checkedToday ? 'oklch(42% 0.07 155)' : 'oklch(60% 0.02 90)',
+          avatar: this.charSvg(c, lv, 48, 'admin'+i),
+        };
+      });
+      const adminView = s.adminView;
+      return {
+        isLoginScreen:false, isCreateScreen:false, isAppScreen:false, isAdminScreen:true,
+        smallLogo: this.logoSvg(28),
+        adminGradeOptions:[1,2,3,4,5,6], adminClassOptions:[1,2,3,4],
+        adminGrade: gradeSel, adminClass: classSel,
+        onAdminGradeChange: (e) => this.setState({ adminGrade: e.target.value }),
+        onAdminClassChange: (e) => this.setState({ adminClass: e.target.value }),
+        adminRows: rows, adminCount: rows.length,
+        isAdminTableView: adminView === 'table', isAdminGridView: adminView === 'grid',
+        onSetAdminTable: () => this.setState({ adminView: 'table' }),
+        onSetAdminGrid: () => this.setState({ adminView: 'grid' }),
+        adminTableTabBg: adminView === 'table' ? 'white' : 'transparent', adminTableTabColor: adminView === 'table' ? 'oklch(40% 0.02 90)' : 'oklch(52% 0.02 90)',
+        adminGridTabBg: adminView === 'grid' ? 'white' : 'transparent', adminGridTabColor: adminView === 'grid' ? 'oklch(40% 0.02 90)' : 'oklch(52% 0.02 90)',
+        onExitAdmin: () => this.setState({ adminMode: false }),
+      };
+    }
+
+    const isCreateScreen = s.studentIndex === null && s.screen === 'create';
+    const isLoginScreen = s.studentIndex === null && !isCreateScreen;
+    const isAppScreen = s.studentIndex !== null;
+
+    if (isCreateScreen){
+      const courseCards = COURSES.map(c => {
+        const selected = s.newCourseId === c.id;
+        return {
+          id: c.id, name: c.name,
+          border: selected ? c.color : 'oklch(90% 0.015 85)',
+          bg: selected ? c.bg : 'oklch(99% 0.007 85)',
+          icon: this.charSvg(c, 1, 52, 'nc'+c.id),
+          onClick: () => this.setState({ newCourseId: c.id }),
+        };
+      });
+      const canSubmit = s.newName.trim() && s.newCourseId && s.newGoalInput.trim();
+      return {
+        isLoginScreen: false, isCreateScreen: true, isAppScreen: false,
+        bigLogo: this.logoSvg(72),
+        newName: s.newName, newGoalInput: s.newGoalInput,
+        onNewNameChange: (e) => this.setState({ newName: e.target.value }),
+        onNewGoalChange: (e) => this.setState({ newGoalInput: e.target.value }),
+        courseCards,
+        canSubmitDisabled: !canSubmit, submitBtnBg: canSubmit ? 'oklch(50% 0.09 155)' : 'oklch(85% 0.01 85)',
+        onSubmitCreate: () => {
+          if (!canSubmit) return;
+          this.setState(prev => {
+            const newStudent = { name: prev.newName.trim(), grade: Number(prev.loginGrade), cls: Number(prev.loginClass), courseId: prev.newCourseId, points:0, weeklyCount:0, streak:0, goal: prev.newGoalInput.trim(), diaryHistory:[], checkedToday:false, todayDiary:'' };
+            const list = [...prev.students, newStudent];
+            return { students: list, studentIndex: list.length - 1, screen:'dashboard', newName:'', newCourseId:null, newGoalInput:'' };
+          });
+        },
+        onBackToLogin: () => this.setState({ screen:'login' }),
+      };
+    }
+
+    if (isLoginScreen){
+      const gradeSel = s.loginGrade, classSel = s.loginClass;
+      const matched = (gradeSel && classSel)
+        ? students.map((st,i)=>({st,i})).filter(({st}) => String(st.grade) === String(gradeSel) && String(st.cls) === String(classSel))
+        : [];
+      const loginStudents = matched.map(({st,i}) => {
+        const course = courseOf(st.courseId);
+        const level = levelOf(st.points);
+        return {
+          name: st.name, gradeClass: st.grade + '학년 ' + st.cls + '반',
+          stageName: STAGE_NAMES[level-1], course,
+          avatar: this.charSvg(course, level, 40, 'la'+i),
+          onSelect: () => this.setState({ studentIndex: i, screen:'dashboard', diaryInput:'', previewLevel:null, zooCourseId:null, zooLevel:null }),
+        };
+      });
+      return {
+        isLoginScreen, isCreateScreen: false, isAppScreen: false,
+        bigLogo: this.logoSvg(96),
+        gradeOptions: [1,2,3,4,5,6], classOptions: [1,2,3,4],
+        loginGrade: gradeSel, loginClass: classSel,
+        onGradeChange: (e) => this.setState({ loginGrade: e.target.value }),
+        onClassChange: (e) => this.setState({ loginClass: e.target.value }),
+        hasMatches: gradeSel && classSel && loginStudents.length > 0,
+        showNoMatch: gradeSel && classSel && loginStudents.length === 0,
+        loginStudents,
+        onGoCreate: () => this.setState({ screen: 'create' }),
+        onGoAdmin: () => this.setState({ adminMode: true }),
+      };
+    }
+
+    const course = courseOf(cur.courseId);
+    const level = levelOf(cur.points);
+    const nextThreshold = level < 5 ? THRESHOLDS[level] : null;
+    const remaining = nextThreshold !== null ? nextThreshold - cur.points : 0;
+    const bandStart = THRESHOLDS[level-1];
+    const bandEnd = level < 5 ? THRESHOLDS[level] : THRESHOLDS[4];
+    const growthPct = level >= 5 ? 100 : Math.round(((cur.points - bandStart) / (bandEnd - bandStart)) * 100);
+
+    const setScreen = (scr) => this.setState({ screen: scr });
+    const navDefs = [
+      {key:'dashboard', label:'오늘의 기록', icon:'home'},
+      {key:'profile', label:'내 도전 프로필', icon:'user'},
+      {key:'zoo', label:'캐릭터 도감', icon:'book'},
+      {key:'award', label:'표창장 현황', icon:'award'},
+    ];
+    const navItems = navDefs.map(n => {
+      const active = s.screen === n.key;
+      const activeColor = active ? course.dark : 'oklch(52% 0.02 90)';
+      return {
+        key:n.key, label:n.label,
+        activeBg: active ? course.bg : 'transparent',
+        activeColor,
+        icon: this.icon(n.icon, 20, activeColor),
+        onClick: () => setScreen(n.key),
+      };
+    });
+
+    const screenTitleMap = {dashboard:'오늘의 기록', profile:'내 도전 프로필', zoo:'캐릭터 도감', award:'표창장 현황'};
+
+    const previewLevel = s.previewLevel || level;
+    const stageStepper = [1,2,3,4,5].map(lv => {
+      const locked = lv > level;
+      const active = lv === previewLevel;
+      return {
+        level: lv,
+        dotBg: active ? course.bg : (locked ? 'oklch(95% 0.01 85)' : 'white'),
+        dotBorder: active ? course.color : (locked ? 'oklch(90% 0.015 85)' : 'oklch(90% 0.015 85)'),
+        dotIcon: locked ? this.icon('lock', 14, 'oklch(70% 0.01 85)') : this.icon('check', 14, active ? course.dark : course.color),
+        labelColor: active ? course.dark : 'oklch(60% 0.02 90)',
+        onClick: () => this.setState({ previewLevel: lv }),
+      };
+    });
+
+    const diaryInput = s.diaryInput;
+    const checkinSaved = cur.checkedToday && !this._editing;
+    const showCheckinForm = !checkinSaved;
+    const saveDisabled = !diaryInput.trim();
+
+    const onSaveCheckin = () => {
+      if (saveDisabled) return;
+      this.setState(prev => {
+        const list = prev.students.slice();
+        const st = {...list[prev.studentIndex]};
+        const wasChecked = st.checkedToday;
+        if (!wasChecked){
+          st.points += 1; st.streak += 1; st.weeklyCount = Math.min(4, st.weeklyCount + 1);
+          st.diaryHistory = [{date:'10.'+ '15', text: diaryInput}, ...st.diaryHistory];
+        } else {
+          st.diaryHistory = [{date: st.diaryHistory[0].date, text: diaryInput}, ...st.diaryHistory.slice(1)];
+        }
+        st.checkedToday = true; st.todayDiary = diaryInput;
+        list[prev.studentIndex] = st;
+        return { students: list };
+      });
+      this._editing = false;
+    };
+    const onEditCheckin = () => { this._editing = true; this.setState({ diaryInput: cur.todayDiary }); };
+
+    const achievementView = s.achievementView;
+    const weeks = [];
+    let cursorD = new Date(PROGRAM_START);
+    const dow = (cursorD.getDay() + 6) % 7;
+    cursorD.setDate(cursorD.getDate() - dow);
+    while (cursorD <= PROGRAM_END){
+      const days = [];
+      for (let i=0;i<7;i++){
+        const d = new Date(cursorD);
+        const inRange = d >= PROGRAM_START && d <= PROGRAM_END;
+        const checked = inRange && isCheckedDate(d);
+        const isToday = inRange && sameDay(d, DEMO_TODAY);
+        days.push({
+          bg: !inRange ? 'transparent' : (checked ? course.color : 'oklch(93% 0.01 85)'),
+          ring: isToday ? ('0 0 0 2px ' + course.dark + ' inset') : 'none',
+        });
+        cursorD.setDate(cursorD.getDate() + 1);
+      }
+      weeks.push({ days });
+    }
+
+    const monthDays = [];
+    const monthDate = new Date(2026, 9, 1);
+    const firstDow = monthDate.getDay();
+    for (let i=0;i<firstDow;i++) monthDays.push({ bg:'transparent', ring:'none', stamp:'' , color:'transparent'});
+    for (let day=1; day<=31; day++){
+      const d = new Date(2026,9,day);
+      const checked = isCheckedDate(d);
+      const isToday = sameDay(d, DEMO_TODAY);
+      const future = d > DEMO_TODAY;
+      monthDays.push({
+        bg: checked ? course.bg : (future ? 'oklch(97% 0.005 85)' : 'oklch(93% 0.01 85)'),
+        ring: isToday ? ('0 0 0 2px ' + course.dark + ' inset') : 'none',
+        color: checked ? course.dark : 'oklch(62% 0.02 90)',
+        stamp: checked ? '★' : String(day),
+      });
+    }
+
+    const weeklyMet = cur.weeklyCount >= 4;
+
+    const zooCourseId = s.zooCourseId || cur.courseId;
+    const zooLevel = s.zooLevel || level;
+    const zooCourses = COURSES.map(zc => {
+      const isOwn = zc.id === cur.courseId;
+      return {
+        id: zc.id, name: zc.name, color: zc.color, nameColor: zc.id === zooCourseId ? zc.dark : 'oklch(40% 0.02 90)',
+        onSelectCourse: () => this.setState({ zooCourseId: zc.id, zooLevel: isOwn ? level : 1 }),
+        stages: [1,2,3,4,5].map(lv => {
+          const unlocked = isOwn && lv <= level;
+          const selected = zc.id === zooCourseId && lv === zooLevel;
+          return {
+            level: lv, shortName: STAGE_NAMES[lv-1],
+            unlocked,
+            border: selected ? zc.color : 'oklch(90% 0.015 85)',
+            bg: selected ? zc.bg : 'oklch(99% 0.005 85)',
+            icon: unlocked ? this.charSvg(zc, lv, 40, 'z'+zc.id+lv) : this.icon('lock', 22, 'oklch(58% 0.015 85)'),
+            filter: unlocked ? 'none' : 'grayscale(1)',
+            textColor: unlocked ? 'oklch(40% 0.02 90)' : 'oklch(70% 0.01 85)',
+            onClick: () => this.setState({ zooCourseId: zc.id, zooLevel: lv }),
+          };
+        }),
+      };
+    });
+    const zooCourseObj = courseOf(zooCourseId);
+    const zooUnlocked = zooCourseId === cur.courseId && zooLevel <= level;
+
+    const finalReached = level >= 5;
+
+    return {
+      isLoginScreen: false, isAppScreen: true,
+      isMobile, showSidebar: !isMobile, showBottomTab: isMobile, showTopLogo: isMobile,
+      contentBottomPad: isMobile ? '76px' : '0px',
+      smallLogo: this.logoSvg(30),
+      switchIcon: this.icon('switch', 16, 'oklch(52% 0.02 90)'),
+      navItems,
+      screenTitle: screenTitleMap[s.screen],
+      curStudent: { name: cur.name, gradeClass: cur.grade+'학년 '+cur.cls+'반', stageName: STAGE_NAMES[level-1], totalSuccess: cur.points, goal: cur.goal, joinDateLabel: '2026.08.27 부터 함께 도전 중', diaryHistory: cur.diaryHistory },
+      curCourse: course, curCourseBg: course.bg, curCourseDark: course.dark, curCourseColor: course.color,
+      headerAvatar: this.charSvg(course, level, 30, 'hdr'),
+      onSwitchStudent: () => this.setState({ studentIndex: null, screen:'dashboard' }),
+
+      isDashboard: s.screen === 'dashboard', isProfile: s.screen === 'profile', isZoo: s.screen === 'zoo', isAward: s.screen === 'award',
+
+      checkinSaved, showCheckinForm, savedDiary: cur.todayDiary,
+      diaryInput, saveDisabled,
+      onDiaryChange: (e) => this.setState({ diaryInput: e.target.value }),
+      onSaveCheckin, onEditCheckin,
+      saveBtnBg: saveDisabled ? 'oklch(85% 0.01 85)' : course.dark,
+      saveBtnLabel: cur.checkedToday ? '수정 완료하기' : '오늘의 도전 완료하기',
+      checkIconGreen: this.icon('check', 16, course.dark), checkIconWhite: this.icon('check', 16, 'white'), editIcon: this.icon('edit', 12, course.dark),
+
+      previewIllustration: this.charSvg(course, previewLevel, 64, 'prev'),
+      previewFilter: previewLevel > level ? 'grayscale(1) opacity(0.45)' : 'none',
+      previewLocked_bg: course.bg,
+      previewStageName: STAGE_NAMES[previewLevel-1] + (previewLevel > level ? ' (아직 도달 전)' : ''),
+      previewDesc: STAGE_DESC[previewLevel-1],
+      stageStepper,
+      growthGuideLine: level >= 5 ? '최종 단계까지 성장했어요! 정말 대단해요 🎉' : ('다음 단계까지 ' + remaining + '회 남았어요! 주 4회 이상 실천하면 최종 단계까지 성장할 수 있어요.'),
+      growthBarPct: growthPct + '%',
+
+      isWeekView: achievementView === 'week', isMonthView: achievementView === 'month',
+      onSetWeekView: () => this.setState({ achievementView: 'week' }),
+      onSetMonthView: () => this.setState({ achievementView: 'month' }),
+      weekTabBg: achievementView === 'week' ? 'white' : 'transparent', weekTabColor: achievementView === 'week' ? course.dark : 'oklch(52% 0.02 90)',
+      monthTabBg: achievementView === 'month' ? 'white' : 'transparent', monthTabColor: achievementView === 'month' ? course.dark : 'oklch(52% 0.02 90)',
+      weeklyRatio: Math.min(cur.weeklyCount,4) + '/4',
+      weeklyGuideLine: weeklyMet ? '이번주 목표를 달성했어요! 이 기세를 이어가봐요.' : '이번주 4회 이상 도전을 완료하면 캐릭터가 더 잘 자라요.',
+      grassWeeks: weeks, weekdayLabels: WEEKDAY_LABELS, monthLabel: '2026년 10월', monthDays,
+
+      profileIllustration: this.charSvg(course, level, 76, 'prof'),
+      profileStats: [
+        {label:'누적 성공 횟수', value: cur.points + '회'},
+        {label:'연속 도전', value: cur.streak + '일'},
+        {label:'이번주 진행', value: Math.min(cur.weeklyCount,4) + '/4'},
+        {label:'현재 단계', value: level + ' / 5단계'},
+      ],
+
+      zooCourses, zooPreviewBg: zooUnlocked ? zooCourseObj.bg : 'oklch(96% 0.005 85)',
+      zooPreviewIllustration: zooUnlocked ? this.charSvg(zooCourseObj, zooLevel, 110, 'zp') : this.icon('lock', 60, 'oklch(58% 0.015 85)'),
+      zooPreviewFilter: zooUnlocked ? 'none' : 'grayscale(1)',
+      zooPreviewTitle: zooUnlocked ? (zooCourseObj.name + ' · ' + STAGE_NAMES[zooLevel-1]) : '아직 잠겨있어요',
+      zooPreviewDesc: zooUnlocked ? STAGE_DESC[zooLevel-1] : '내 코스에서 꾸준히 도전을 완료하면 새로운 친구를 만날 수 있어요.',
+
+      awardBorder: finalReached ? GOLD : 'oklch(90% 0.015 85)',
+      awardFilter: finalReached ? 'none' : 'grayscale(0.6) opacity(0.7)',
+      awardIcon: this.icon('award', 80, finalReached ? GOLD_DARK : 'oklch(75% 0.01 85)'),
+      awardTitle: finalReached ? (cur.name + ' 학생') : '아직 표창장이 없어요',
+      awardBody: finalReached
+        ? '위 학생은 2026학년도 도전활동 기간 동안 꾸준히 도전을 실천하여 최종 단계까지 성장하였으므로 이 표창장을 드립니다.'
+        : ('최종 단계까지 ' + (60 - cur.points) + '회 남았어요. 주 4회 이상 꾸준히 도전을 완료하면 표창장을 받을 수 있어요!'),
+      awardDate: '2026년 12월 24일',
+    };
+  }
+
+  logoSvg(size){
+    return React.createElement('img',{src:'uploads/logo.png', alt:'영천초 로고', style:{width:size, height:size, objectFit:'contain'}, key:'logo'});
+  }
+}
+
+</script>
+</body>
+</html>

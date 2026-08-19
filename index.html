@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>영천초 도전활동 기록지</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR','Gowun Dodum',sans-serif;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='300' viewBox='0 0 260 300'%3E%3Ccircle cx='40' cy='24' r='1.2' fill='white'/%3E%3Ccircle cx='190' cy='55' r='1.3' fill='white'/%3E%3Ccircle cx='100' cy='150' r='1' fill='white'/%3E%3Ccircle cx='225' cy='210' r='1.1' fill='white'/%3E%3Ccircle cx='30' cy='260' r='1' fill='white'/%3E%3C/svg%3E"),linear-gradient(180deg,#03040c 0%,#0b1638 12%,#173a6e 26%,#2f6fa8 42%,#5aa8d6 58%,#7cc3ea 74%,#a9dcf3 90%,#cfeefb 100%);background-repeat:repeat-x,no-repeat;background-size:260px 45%,100% 100%;background-attachment:fixed,fixed;min-height:100vh;color:oklch(32% 0.02 90);-webkit-tap-highlight-color:transparent}
+#root{position:relative;z-index:2;}
+@keyframes ycFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes ycPop{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes cloudDrift{0%{transform:translateX(110vw)}100%{transform:translateX(-60vw)}}
+.yc-cloud{position:fixed;pointer-events:none;z-index:1;mix-blend-mode:screen;animation:cloudDrift linear infinite;will-change:transform;}
+input,select,button{font-family:inherit}
+button{cursor:pointer}
+a{color:oklch(42% 0.07 155)}
+[data-dashgrid]{display:grid;grid-template-columns:1fr;gap:20px}
+@media(min-width:800px){[data-dashgrid]{grid-template-columns:1.1fr 1fr}}
+[data-profgrid]{display:grid;grid-template-columns:1fr;gap:20px}
+@media(min-width:800px){[data-profgrid]{grid-template-columns:0.9fr 1.4fr}}
+[data-zoogrid]{display:grid;grid-template-columns:1fr;gap:20px}
+@media(min-width:800px){[data-zoogrid]{grid-template-columns:1.3fr 1fr}}
+[data-statgrid]{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+</style>
+</head>
+<body>
+<!-- 구름 레이어 -->
+<img class="yc-cloud" src="./public/구름 그림 1.png" alt=""
+  style="width:340px;top:8%;opacity:0.55;animation-duration:38s;animation-delay:0s;">
+<img class="yc-cloud" src="./public/구름 그림 2.png" alt=""
+  style="width:220px;top:22%;opacity:0.4;animation-duration:52s;animation-delay:-18s;">
+<img class="yc-cloud" src="./public/구름 그림 1.png" alt=""
+  style="width:280px;top:38%;opacity:0.3;animation-duration:44s;animation-delay:-30s;">
+<img class="yc-cloud" src="./public/구름 그림 2.png" alt=""
+  style="width:180px;top:55%;opacity:0.25;animation-duration:60s;animation-delay:-8s;">
+<img class="yc-cloud" src="./public/구름 그림 1.png" alt=""
+  style="width:260px;top:14%;opacity:0.35;animation-duration:48s;animation-delay:-42s;">
+<div id="root"></div>
+<script type="text/babel">
+// ═══════════════════════════════════════════════════════
+// FIREBASE
+// ═══════════════════════════════════════════════════════
+const FB_CONFIG = {
+  apiKey: "AIzaSyBXDnHAUsr8WC7J3PgIj70C1_2UqDG3Chg",
+  projectId: "yeongcheon-challenge-a97cf",
+  storageBucket: "yeongcheon-challenge-a97cf.firebasestorage.app",
+  messagingSenderId: "864629871654",
+  appId: "1:864629871654:web:e378430ffff01ada0282e7"
+};
+const ADMIN_PW = '5014';
+let _db = null;
+function db() {
+  if (!_db) { if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG); _db = firebase.firestore(); }
+  return _db;
+}
+
+// ═══════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════
+const COURSES = [
+  {id:'magpie',  name:'까치',   color:'oklch(64% 0.1 155)',  bg:'oklch(94% 0.035 155)', dark:'oklch(40% 0.08 155)'},
+  {id:'tiger',   name:'호랑이', color:'oklch(72% 0.14 55)',  bg:'oklch(94% 0.05 55)',   dark:'oklch(46% 0.11 45)'},
+  {id:'rabbit',  name:'토끼',   color:'oklch(80% 0.1 15)',   bg:'oklch(95% 0.035 15)',  dark:'oklch(50% 0.1 15)'},
+  {id:'squirrel',name:'다람쥐', color:'oklch(70% 0.09 65)',  bg:'oklch(94% 0.035 65)',  dark:'oklch(44% 0.08 60)'},
+];
+const GOLD = 'oklch(78% 0.13 85)', GOLD_DARK = 'oklch(52% 0.1 80)';
+const STAGE_NAMES = ['알','새싹 친구','씩씩한 친구','늠름한 친구','반짝이는 최종 친구'];
+const STAGE_DESC = [
+  '아직 알 속에 있어요. 매일 도전을 실천하면 곧 태어날 거예요!',
+  '드디어 태어났어요! 작고 여린 새싹 친구예요.',
+  '조금씩 튼튼해지고 있어요. 씩씩한 친구가 되었어요!',
+  '이제 제법 늠름해요. 최종 단계가 눈앞이에요!',
+  '반짝반짝, 최종 단계에 도착했어요! 정말 대단해요.',
+];
+const THRESHOLDS = [0, 8, 20, 36, 60];
+const WEEKDAY_LABELS = ['일','월','화','수','목','금','토'];
+const PROGRAM_START = new Date(2026, 7, 27);
+const PROGRAM_END   = new Date(2026, 11, 24);
+const GOAL_TEMPLATES = {
+  rabbit:   ['하루에 줄넘기 100개 하기','매일 방 정리 5분 하기'],
+  tiger:    ['매일 운동장 두 바퀴 뛰기','하루 30분 이상 운동하기'],
+  squirrel: ['책 15분 이상 읽기','매일 영어 단어 5개 외우기'],
+  magpie:   ['하루에 물 6컵 마시기','아침에 스트레칭 10분 하기'],
+};
+const CHAR_IMG = {
+  magpie: ['','./public/까치_1단계.png','./public/까치_2단계.png','./public/까치_3단계.png','./public/까치_4단계.png','./public/까치_5단계.png'],
+  tiger:  ['','./public/호랑이_1단계.png','./public/호랑이_2단계.png','./public/호랑이_3단계.png','./public/호랑이_4단계.png','./public/호랑이_5단계.png'],
+};
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+const courseOf = id => COURSES.find(c => c.id === id);
+const levelOf  = pts => THRESHOLDS.filter(t => pts >= t).length;
+const todayKey = (d=new Date()) =>
+  d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const weekStartDate = () => { const r=new Date(); r.setDate(r.getDate()-r.getDay()); r.setHours(0,0,0,0); return r; };
+const sameDay = (a,b) => a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+const fmtDate = d => (d.getMonth()+1)+'.'+d.getDate();
+
+// ═══════════════════════════════════════════════════════
+// STYLE CONSTANTS
+// ═══════════════════════════════════════════════════════
+const CARD  = {background:'oklch(96% 0.015 80)',borderRadius:28,boxShadow:'0 12px 32px oklch(40% 0.06 220 / 0.18)',padding:'28px'};
+const SURF  = {background:'oklch(99% 0.007 85)',border:'1px solid oklch(90% 0.015 85)'};
+const INPUT = {border:'1.5px solid oklch(90% 0.015 85)',borderRadius:14,padding:'12px 14px',fontSize:14,background:'oklch(99% 0.007 85)',width:'100%',outline:'none'};
+const PRI   = (bg='oklch(50% 0.09 155)') => ({border:'none',borderRadius:16,padding:'14px',background:bg,color:'white',fontSize:15,fontWeight:800,width:'100%'});
+const SEC   = {border:'none',background:'none',color:'oklch(52% 0.02 90)',fontSize:13};
+const PILL  = (bg,color) => ({fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:999,background:bg,color,display:'inline-flex',alignItems:'center'});
+
+// ═══════════════════════════════════════════════════════
+// SVG ICON
+// ═══════════════════════════════════════════════════════
+function Ic({n,s=20,c='currentColor'}) {
+  const p={viewBox:'0 0 100 100',width:s,height:s,fill:'none',stroke:c,strokeWidth:8,strokeLinecap:'round',strokeLinejoin:'round'};
+  switch(n){
+    case 'home':   return <svg {...p}><polyline points="14,52 50,18 86,52"/><rect x={26} y={50} width={48} height={36} rx={4}/></svg>;
+    case 'user':   return <svg {...p}><circle cx={50} cy={32} r={16}/><path d="M18,86 Q50,54 82,86"/></svg>;
+    case 'book':   return <svg {...p}><path d="M50,26 C40,18 24,18 14,22 L14,80 C24,76 40,76 50,84"/><path d="M50,26 C60,18 76,18 86,22 L86,80 C76,76 60,76 50,84"/></svg>;
+    case 'award':  return <svg {...p}><circle cx={50} cy={36} r={22}/><polyline points="36,54 26,88 50,76"/><polyline points="64,54 74,88 50,76"/></svg>;
+    case 'check':  return <svg {...p}><polyline points="20,52 42,74 82,26"/></svg>;
+    case 'edit':   return <svg {...p}><line x1={22} y1={78} x2={66} y2={34}/><polygon points="66,34 82,18 88,24 72,40"/><line x1={16} y1={88} x2={32} y2={88}/></svg>;
+    case 'lock':   return <svg {...p}><rect x={24} y={46} width={52} height={42} rx={8}/><path d="M32,46 L32,32 Q32,14 50,14 Q68,14 68,32 L68,46"/></svg>;
+    case 'switch': return <svg {...p}><polyline points="34,20 58,20 58,44"/><line x1={58} y1={20} x2={20} y2={58}/><polyline points="66,80 42,80 42,56"/><line x1={42} y1={80} x2={80} y2={42}/></svg>;
+    case 'plus':   return <svg {...p}><line x1={50} y1={20} x2={50} y2={80}/><line x1={20} y1={50} x2={80} y2={50}/></svg>;
+    case 'trash':  return <svg {...p}><polyline points="24,30 76,30"/><path d="M40,30 L40,22 L60,22 L60,30"/><rect x={28} y={30} width={44} height={50} rx={6}/></svg>;
+    default:       return <svg {...p}><circle cx={50} cy={50} r={6} fill={c}/></svg>;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// CHARACTER ILLUSTRATION
+// ═══════════════════════════════════════════════════════
+function Char({course, level, size=110, style={}}) {
+  const imgs = CHAR_IMG[course.id];
+  if (imgs && imgs[level]) return <img src={imgs[level]} style={{width:size,height:size,objectFit:'contain',...style}} alt={STAGE_NAMES[level-1]}/>;
+  const gold = level >= 5, body = gold ? GOLD : course.color;
+  const kids = [];
+  if (level <= 1) {
+    kids.push(<ellipse key="egg" cx={60} cy={70} rx={32} ry={38} fill={body}/>);
+    kids.push(<circle key="sp1" cx={48} cy={58} r={4} fill={course.dark} opacity={.35}/>);
+    kids.push(<circle key="sp2" cx={70} cy={72} r={3.5} fill={course.dark} opacity={.35}/>);
+    kids.push(<circle key="sp3" cx={56} cy={88} r={3} fill={course.dark} opacity={.35}/>);
+  } else {
+    if (gold) kids.push(<circle key="glow" cx={60} cy={64} r={52} fill={GOLD} opacity={.18}/>);
+    if (course.id==='squirrel') kids.push(<ellipse key="tail" cx={92} cy={50} rx={16} ry={24} fill={body} transform="rotate(-25 92 50)"/>);
+    if (course.id==='magpie') { kids.push(<ellipse key="wl" cx={24} cy={66} rx={12} ry={18} fill={course.dark} opacity={.7}/>); kids.push(<ellipse key="wr" cx={96} cy={66} rx={12} ry={18} fill={course.dark} opacity={.7}/>); }
+    kids.push(<ellipse key="body" cx={60} cy={70} rx={36} ry={32} fill={body}/>);
+    if (course.id==='rabbit')   { kids.push(<ellipse key="e1" cx={44} cy={28} rx={7} ry={20} fill={body} transform="rotate(-8 44 28)"/>); kids.push(<ellipse key="e2" cx={76} cy={28} rx={7} ry={20} fill={body} transform="rotate(8 76 28)"/>); }
+    else if (course.id==='tiger')   { kids.push(<polygon key="e1" points="34,44 46,44 38,24" fill={body}/>); kids.push(<polygon key="e2" points="86,44 74,44 82,24" fill={body}/>); }
+    else if (course.id==='squirrel'){ kids.push(<circle key="e1" cx={40} cy={34} r={9} fill={body}/>); kids.push(<circle key="e2" cx={80} cy={34} r={9} fill={body}/>); }
+    else if (course.id==='magpie')  { kids.push(<polygon key="beak" points="52,80 68,80 60,92" fill={course.dark}/>); }
+    kids.push(<circle key="eyeL" cx={48} cy={66} r={4.5} fill="oklch(30% 0.02 90)"/>);
+    kids.push(<circle key="eyeR" cx={72} cy={66} r={4.5} fill="oklch(30% 0.02 90)"/>);
+    kids.push(<circle key="ck1" cx={38} cy={78} r={6} fill="oklch(78% 0.1 30)" opacity={.5}/>);
+    kids.push(<circle key="ck2" cx={82} cy={78} r={6} fill="oklch(78% 0.1 30)" opacity={.5}/>);
+    if (level>=3){ kids.push(<ellipse key="ft1" cx={46} cy={102} rx={9} ry={7} fill={body}/>); kids.push(<ellipse key="ft2" cx={74} cy={102} rx={9} ry={7} fill={body}/>); }
+    if (level>=4){ kids.push(<rect key="band" x={28} y={56} width={64} height={11} rx={5} fill="oklch(78% 0.1 30)" transform="rotate(-4 60 62)"/>); kids.push(<polygon key="knot" points="88,56 100,62 88,68" fill="oklch(52% 0.11 30)"/>); }
+    if (level>=5){ kids.push(<polygon key="crown" points="42,20 48,4 54,18 60,2 66,18 72,4 78,20" fill={GOLD} stroke={GOLD_DARK} strokeWidth={2}/>); kids.push(<polygon key="sp1" points="12,40 16,32 20,40 16,48" fill={GOLD}/>); kids.push(<polygon key="sp2" points="104,54 108,46 112,54 108,62" fill={GOLD}/>); kids.push(<polygon key="sp3" points="18,92 22,84 26,92 22,100" fill={GOLD}/>); }
+  }
+  return <svg viewBox="0 0 120 120" width={size} height={size} style={style}>{kids}</svg>;
+}
+
+// ═══════════════════════════════════════════════════════
+// LOGO
+// ═══════════════════════════════════════════════════════
+function Logo({size}) {
+  return <img src="./public/logo.png" alt="영천초 로고" style={{width:size,height:size,objectFit:'contain',flexShrink:0}}/>;
+}
+
+// ═══════════════════════════════════════════════════════
+// MAIN APP
+// ═══════════════════════════════════════════════════════
+function App() {
+  const {useState, useEffect, useRef} = React;
+
+  // ── Global state ──────────────────────────────────────
+  const [students, setStudents] = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [loadErr,  setLoadErr]  = useState(null);
+
+  // ── Navigation ────────────────────────────────────────
+  const [screen,     setScreen]     = useState('login'); // login|create|dashboard|profile|zoo|award
+  const [studentIdx, setStudentIdx] = useState(null);
+  const [adminMode,  setAdminMode]  = useState(false);
+
+  // ── Login form ────────────────────────────────────────
+  const [loginGrade, setLoginGrade] = useState('');
+  const [loginClass, setLoginClass] = useState('');
+
+  // ── Create form ───────────────────────────────────────
+  const [newName,   setNewName]   = useState('');
+  const [newCourse, setNewCourse] = useState(null);
+  const [newGoal,   setNewGoal]   = useState('');
+
+  // ── Dashboard ─────────────────────────────────────────
+  const [diary,      setDiary]      = useState('');
+  const [editing,    setEditing]    = useState(false);
+  const [saving,     setSaving]     = useState(false);
+  const [prevLv,     setPrevLv]     = useState(null);
+  const [achView,    setAchView]    = useState('week');
+  const [zCourseId,  setZCourseId]  = useState(null);
+  const [zLevel,     setZLevel]     = useState(null);
+  const [checkins,   setCheckins]   = useState(new Set()); // date strings for current student
+
+  // ── Admin ─────────────────────────────────────────────
+  const [adminPw,       setAdminPw]       = useState('');
+  const [adminUnlocked, setAdminUnlocked] = useState(false);
+  const [adminPwErr,    setAdminPwErr]    = useState('');
+  const [adminGrade,    setAdminGrade]    = useState('');
+  const [adminClass,    setAdminClass]    = useState('');
+  const [adminView,     setAdminView]     = useState('table');
+  const [showAddForm,   setShowAddForm]   = useState(false);
+  const [af_name,       setAfName]        = useState('');
+  const [af_grade,      setAfGrade]       = useState('');
+  const [af_class,      setAfClass]       = useState('');
+  const [af_course,     setAfCourse]      = useState('');
+  const [af_goal,       setAfGoal]        = useState('');
+  // 관리자 수정
+  const [editingId,  setEditingId]  = useState(null);
+  const [editForm,   setEditForm]   = useState({});
+
+  // ── PIN 로그인 모달 ────────────────────────────────────
+  const [pinModal,  setPinModal]  = useState(null); // {si: studentIdx}
+  const [pinInput,  setPinInput]  = useState('');
+  const [pinError,  setPinError]  = useState('');
+  // 프로필 생성 PIN
+  const [newPin,    setNewPin]    = useState('');
+
+  // ── Viewport ──────────────────────────────────────────
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 800);
+
+  useEffect(() => {
+    loadData();
+    const fn = () => setIsMobile(window.innerWidth < 800);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+
+  // ── Firebase ops ──────────────────────────────────────
+  async function loadData() {
+    try {
+      const todayS = todayKey(), wsKey = todayKey(weekStartDate());
+      const [ss, cs] = await Promise.all([
+        db().collection('students').get(),
+        db().collection('checkins').where('date','>=',wsKey).get(),
+      ]);
+      const wm={}, ts=new Set(), dm={};
+      cs.docs.forEach(d => {
+        const {studentId,date,diary} = d.data();
+        wm[studentId] = (wm[studentId]||0)+1;
+        if (date===todayS){ ts.add(studentId); dm[studentId]=diary||''; }
+      });
+      const list = ss.docs.map(d => ({id:d.id,...d.data(),weeklyCount:wm[d.id]||0,checkedToday:ts.has(d.id),todayDiary:dm[d.id]||''}));
+      list.sort((a,b) => a.grade-b.grade || a.cls-b.cls || a.name.localeCompare(b.name,'ko'));
+      setStudents(list);
+      setLoading(false);
+    } catch(e) { setLoadErr(e.message); setLoading(false); }
+  }
+
+  async function loadCheckins(sid) {
+    try {
+      const s = await db().collection('checkins').where('studentId','==',sid).get();
+      setCheckins(new Set(s.docs.map(d => d.data().date)));
+    } catch(e) { console.error(e); }
+  }
+
+  async function doCheckin() {
+    const cur = students[studentIdx];
+    if (!cur||saving) return;
+    setSaving(true);
+    const todayS = todayKey(), docId = cur.id+'_'+todayS;
+    try {
+      const bat = db().batch();
+      bat.set(db().collection('checkins').doc(docId),{studentId:cur.id,date:todayS,diary,ts:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      if (!cur.checkedToday) bat.update(db().collection('students').doc(cur.id),{points:firebase.firestore.FieldValue.increment(1),lastCheckin:todayS});
+      await bat.commit();
+      const np = cur.checkedToday ? cur.points : cur.points+1;
+      setStudents(prev => prev.map((s,i) => i===studentIdx ? {...s,points:np,checkedToday:true,todayDiary:diary,weeklyCount:s.checkedToday?s.weeklyCount:s.weeklyCount+1} : s));
+      setCheckins(prev => { const n=new Set(prev); n.add(todayS); return n; });
+      setEditing(false); setSaving(false);
+    } catch(e) { alert('저장 실패: '+e.message); setSaving(false); }
+  }
+
+  async function adminAddStudent() {
+    if (!af_name||!af_course||!af_grade) return alert('모든 항목을 입력하세요.');
+    const data={name:af_name,grade:Number(af_grade),cls:1,courseId:af_course,goal:af_goal||(GOAL_TEMPLATES[af_course][0]),points:0,streak:0,diaryHistory:[],pin:''};
+    try {
+      const ref = await db().collection('students').add({...data,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      setStudents(prev => [...prev,{id:ref.id,...data,weeklyCount:0,checkedToday:false,todayDiary:''}]);
+      setAfName(''); setAfGrade(''); setAfCourse(''); setAfGoal(''); setShowAddForm(false);
+    } catch(e) { alert('추가 실패: '+e.message); }
+  }
+
+  async function adminUpdate(id, upd) {
+    try { await db().collection('students').doc(id).update(upd); setStudents(prev=>prev.map(s=>s.id===id?{...s,...upd}:s)); }
+    catch(e) { alert('수정 실패: '+e.message); }
+  }
+
+  async function adminDelete(id) {
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+    try { await db().collection('students').doc(id).delete(); setStudents(prev=>prev.filter(s=>s.id!==id)); }
+    catch(e) { alert('삭제 실패: '+e.message); }
+  }
+
+  async function saveNewStudent() {
+    if (!newName.trim()||!newCourse||!newGoal.trim()) return;
+    if (newPin.length>0 && newPin.length!==4) return alert('비밀번호는 4자리 숫자로 입력해주세요.');
+    const data={name:newName.trim(),grade:Number(loginGrade),cls:1,courseId:newCourse,goal:newGoal.trim(),points:0,streak:0,diaryHistory:[],pin:newPin||''};
+    try {
+      const ref = await db().collection('students').add({...data,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      const ns = [...students,{id:ref.id,...data,weeklyCount:0,checkedToday:false,todayDiary:''}];
+      setStudents(ns);
+      setStudentIdx(ns.length-1);
+      setScreen('dashboard');
+      setNewName(''); setNewCourse(null); setNewGoal(''); setNewPin('');
+      setCheckins(new Set());
+    } catch(e) { alert('저장 실패: '+e.message); }
+  }
+
+  // ── PIN 확인 후 로그인 ────────────────────────────────
+  function tryLogin(si) {
+    const s = students[si];
+    if (s.pin) { setPinModal({si}); setPinInput(''); setPinError(''); }
+    else { doLogin(si, s); }
+  }
+  function doLogin(si, s) {
+    setStudentIdx(si); setScreen('dashboard');
+    setPrevLv(null); setZCourseId(null); setZLevel(null);
+    setDiary(''); setEditing(false);
+    loadCheckins(s.id);
+    setPinModal(null); setPinInput(''); setPinError('');
+  }
+  function confirmPin() {
+    const s = students[pinModal.si];
+    if (pinInput === s.pin) doLogin(pinModal.si, s);
+    else setPinError('비밀번호가 틀렸습니다.');
+  }
+
+  // ── Derived ───────────────────────────────────────────
+  const cur    = studentIdx !== null ? students[studentIdx] : null;
+  const course = cur ? courseOf(cur.courseId) : null;
+  const level  = cur ? levelOf(cur.points) : 0;
+
+  // 학년만으로 학생 필터링 (학교 전체가 1반이므로 cls 조건 불필요)
+  const loginStudents = loginGrade
+    ? students.map((s,i)=>({s,i})).filter(({s})=>String(s.grade)===loginGrade)
+    : [];
+
+  // ── Star background ───────────────────────────────────
+  const BG_STYLE = {
+    minHeight:'100vh',
+    color:'oklch(32% 0.02 90)',
+  };
+
+  // ══════════════════════════════════════════════════════
+  // LOADING / ERROR
+  // ══════════════════════════════════════════════════════
+  if (loading) return (
+    <div style={{...BG_STYLE,display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div style={{color:'white',fontSize:18,textAlign:'center'}}>
+        <div style={{marginBottom:12,fontSize:32}}>🌟</div>
+        학생 정보를 불러오는 중...
+      </div>
+    </div>
+  );
+  if (loadErr) return (
+    <div style={{...BG_STYLE,display:'flex',alignItems:'center',justifyContent:'center',padding:32}}>
+      <div style={{...CARD,textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:16,maxWidth:400}}>
+        <div style={{fontSize:14,color:'oklch(55% 0.15 25)'}}>오류: {loadErr}</div>
+        <button onClick={loadData} style={PRI()}>다시 시도</button>
+      </div>
+    </div>
+  );
+
+  // ══════════════════════════════════════════════════════
+  // ADMIN SCREEN
+  // ══════════════════════════════════════════════════════
+  if (adminMode) {
+    if (!adminUnlocked) return (
+      <div style={{...BG_STYLE,display:'flex',alignItems:'center',justifyContent:'center',padding:'32px 20px'}}>
+        <div style={{...CARD,display:'flex',flexDirection:'column',alignItems:'center',gap:20,maxWidth:380,width:'100%'}}>
+          <Logo size={48}/>
+          <div style={{fontFamily:'Gowun Dodum',fontSize:20,fontWeight:700,color:'oklch(38% 0.05 155)'}}>관리자 로그인</div>
+          <input type="password" value={adminPw} onChange={e=>{setAdminPw(e.target.value);setAdminPwErr('');}}
+            onKeyDown={e=>e.key==='Enter'&&(adminPw===ADMIN_PW?setAdminUnlocked(true):setAdminPwErr('비밀번호가 틀렸습니다.'))}
+            placeholder="비밀번호를 입력하세요" style={INPUT}/>
+          {adminPwErr && <div style={{fontSize:12,color:'oklch(55% 0.15 25)',alignSelf:'flex-start'}}>{adminPwErr}</div>}
+          <div style={{display:'flex',gap:10,width:'100%'}}>
+            <button onClick={()=>{setAdminMode(false);setAdminPw('');setAdminPwErr('');}} style={{...SEC,flex:1,border:'1px solid oklch(90% 0.015 85)',borderRadius:14,padding:'12px'}}>취소</button>
+            <button style={{...PRI(),flex:2}} onClick={()=>adminPw===ADMIN_PW?setAdminUnlocked(true):setAdminPwErr('비밀번호가 틀렸습니다.')}>로그인</button>
+          </div>
+        </div>
+      </div>
+    );
+
+    const adminFiltered = students.filter(s=>
+      (!adminGrade||String(s.grade)===adminGrade)&&(!adminClass||String(s.cls)===adminClass)
+    );
+    const adminGrades = [...new Set(students.map(s=>s.grade))].sort((a,b)=>a-b);
+    const adminClasses = adminGrade ? [...new Set(students.filter(s=>String(s.grade)===adminGrade).map(s=>s.cls))].sort((a,b)=>a-b) : [1,2,3,4];
+
+    return (
+      <div style={{...BG_STYLE,padding:'32px 24px',display:'flex',justifyContent:'center'}}>
+        <div style={{...CARD,display:'flex',flexDirection:'column',gap:18,maxWidth:1000,width:'100%',alignSelf:'flex-start'}}>
+          {/* Header */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <Logo size={28}/>
+              <span style={{fontFamily:'Gowun Dodum',fontSize:18,fontWeight:800,color:'oklch(38% 0.05 155)'}}>관리자 페이지 · 전체 도전 현황</span>
+            </div>
+            <button onClick={()=>{setAdminMode(false);setAdminUnlocked(false);setAdminPw('');}} style={{...SURF,border:'1px solid oklch(90% 0.015 85)',borderRadius:12,padding:'8px 16px',fontSize:13,fontWeight:700,color:'oklch(40% 0.02 90)'}}>
+              학생 화면으로
+            </button>
+          </div>
+          {/* Filters */}
+          <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+            <select value={adminGrade} onChange={e=>{setAdminGrade(e.target.value);setAdminClass('');}} style={{...INPUT,width:'auto',padding:'9px 10px',fontSize:13}}>
+              <option value="">전체 학년</option>
+              {adminGrades.map(g=><option key={g} value={g}>{g}학년</option>)}
+            </select>
+            <select value={adminClass} onChange={e=>setAdminClass(e.target.value)} style={{...INPUT,width:'auto',padding:'9px 10px',fontSize:13}}>
+              <option value="">전체 반</option>
+              {adminClasses.map(c=><option key={c} value={c}>{c}반</option>)}
+            </select>
+            <span style={{fontSize:13,fontWeight:700,color:'oklch(52% 0.02 90)'}}>총 {adminFiltered.length}명</span>
+            <div style={{flex:1}}/>
+            <div style={{display:'flex',background:'oklch(95% 0.02 85)',borderRadius:999,padding:4,gap:2}}>
+              {[['table','표로 보기'],['grid','그리드로 보기']].map(([v,l])=>(
+                <button key={v} onClick={()=>setAdminView(v)} style={{border:'none',borderRadius:999,padding:'7px 16px',fontSize:13,fontWeight:700,background:adminView===v?'white':'transparent',color:adminView===v?'oklch(40% 0.02 90)':'oklch(52% 0.02 90)'}}>{l}</button>
+              ))}
+            </div>
+          </div>
+          {/* Add student button */}
+          <button onClick={()=>setShowAddForm(v=>!v)} style={{alignSelf:'flex-start',display:'flex',alignItems:'center',gap:6,border:'1.5px dashed oklch(64% 0.1 155)',borderRadius:12,padding:'8px 16px',background:'oklch(97% 0.02 155)',color:'oklch(40% 0.08 155)',fontSize:13,fontWeight:700}}>
+            <Ic n="plus" s={16} c="oklch(40% 0.08 155)"/> 새 학생 추가
+          </button>
+          {showAddForm && (
+            <div style={{...SURF,borderRadius:20,padding:20,display:'flex',flexDirection:'column',gap:12}}>
+              <div style={{fontSize:14,fontWeight:800}}>새 학생 정보 입력</div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:10}}>
+                <div><label style={{fontSize:11,fontWeight:700,color:'oklch(52% 0.02 90)',display:'block',marginBottom:4}}>이름</label><input value={af_name} onChange={e=>setAfName(e.target.value)} placeholder="이름" style={INPUT}/></div>
+                <div><label style={{fontSize:11,fontWeight:700,color:'oklch(52% 0.02 90)',display:'block',marginBottom:4}}>학년</label>
+                  <select value={af_grade} onChange={e=>setAfGrade(e.target.value)} style={INPUT}><option value="">선택</option>{[1,2,3,4,5,6].map(n=><option key={n} value={n}>{n}학년</option>)}</select></div>
+                <div><label style={{fontSize:11,fontWeight:700,color:'oklch(52% 0.02 90)',display:'block',marginBottom:4}}>반</label>
+                  <input value="1" readOnly style={{...INPUT,background:'oklch(95% 0.01 85)',color:'oklch(52% 0.02 90)'}}/></div>
+                <div><label style={{fontSize:11,fontWeight:700,color:'oklch(52% 0.02 90)',display:'block',marginBottom:4}}>코스</label>
+                  <select value={af_course} onChange={e=>setAfCourse(e.target.value)} style={INPUT}><option value="">선택</option>{COURSES.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+                <div style={{gridColumn:'1/-1'}}><label style={{fontSize:11,fontWeight:700,color:'oklch(52% 0.02 90)',display:'block',marginBottom:4}}>도전 목표 (선택)</label><input value={af_goal} onChange={e=>setAfGoal(e.target.value)} placeholder="매일 할 수 있는 작은 목표로 정해보세요!" style={INPUT}/></div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={()=>{setShowAddForm(false);setAfName('');setAfGrade('');setAfClass('');setAfCourse('');setAfGoal('');}} style={{...SEC,border:'1px solid oklch(90% 0.015 85)',borderRadius:12,padding:'9px 18px'}}>취소</button>
+                <button onClick={adminAddStudent} style={{...PRI('oklch(50% 0.09 155)'),width:'auto',padding:'9px 24px',fontSize:14}}>저장</button>
+              </div>
+            </div>
+          )}
+          {/* Table view */}
+          {adminView==='table' && (
+            <div style={{...SURF,borderRadius:20,overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1.2fr 0.8fr 1fr 0.9fr 0.6fr 0.6fr 0.7fr 1.1fr',padding:'12px 16px',background:'oklch(94% 0.02 85)',fontSize:11.5,fontWeight:800,color:'oklch(45% 0.02 90)'}}>
+                {['이름','학년','코스','단계','이번주','연속','오늘','관리'].map(h=><div key={h}>{h}</div>)}
+              </div>
+              {adminFiltered.map((s) => {
+                const c = courseOf(s.courseId), lv = levelOf(s.points);
+                const isEditing = editingId === s.id;
+                if (isEditing) return (
+                  <div key={s.id} style={{padding:'16px',borderTop:'1px solid oklch(94% 0.01 85)',background:'oklch(97% 0.02 155)'}}>
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))',gap:10,marginBottom:10}}>
+                      <div><label style={{fontSize:11,fontWeight:700,color:'oklch(52% 0.02 90)',display:'block',marginBottom:3}}>이름</label>
+                        <input value={editForm.name||''} onChange={e=>setEditForm(p=>({...p,name:e.target.value}))} style={INPUT}/></div>
+                      <div><label style={{fontSize:11,fontWeight:700,color:'oklch(52% 0.02 90)',display:'block',marginBottom:3}}>학년</label>
+                        <select value={editForm.grade||''} onChange={e=>setEditForm(p=>({...p,grade:Number(e.target.value)}))} style={INPUT}>
+                          {[1,2,3,4,5,6].map(n=><option key={n} value={n}>{n}학년</option>)}</select></div>
+                      <div><label style={{fontSize:11,fontWeight:700,color:'oklch(52% 0.02 90)',display:'block',marginBottom:3}}>코스</label>
+                        <select value={editForm.courseId||''} onChange={e=>setEditForm(p=>({...p,courseId:e.target.value}))} style={INPUT}>
+                          {COURSES.map(cc=><option key={cc.id} value={cc.id}>{cc.name}</option>)}</select></div>
+                      <div><label style={{fontSize:11,fontWeight:700,color:'oklch(52% 0.02 90)',display:'block',marginBottom:3}}>누적 포인트</label>
+                        <input type="number" min={0} value={editForm.points??''} onChange={e=>setEditForm(p=>({...p,points:Number(e.target.value)}))} style={INPUT}/></div>
+                      <div style={{gridColumn:'1/-1'}}><label style={{fontSize:11,fontWeight:700,color:'oklch(52% 0.02 90)',display:'block',marginBottom:3}}>도전 목표</label>
+                        <input value={editForm.goal||''} onChange={e=>setEditForm(p=>({...p,goal:e.target.value}))} style={INPUT}/></div>
+                      <div><label style={{fontSize:11,fontWeight:700,color:'oklch(52% 0.02 90)',display:'block',marginBottom:3}}>비밀번호 (4자리, 초기화하려면 비워두기)</label>
+                        <input type="password" inputMode="numeric" maxLength={4} value={editForm.pin||''} onChange={e=>setEditForm(p=>({...p,pin:e.target.value.replace(/\D/g,'')}))} placeholder="변경 시 입력" style={INPUT}/></div>
+                    </div>
+                    <div style={{display:'flex',gap:8}}>
+                      <button onClick={()=>{setEditingId(null);setEditForm({});}} style={{...SEC,border:'1px solid oklch(90% 0.015 85)',borderRadius:12,padding:'8px 16px'}}>취소</button>
+                      <button onClick={async()=>{
+                        await adminUpdate(s.id,{name:editForm.name,grade:editForm.grade,courseId:editForm.courseId,goal:editForm.goal,points:editForm.points,pin:editForm.pin||''});
+                        setEditingId(null);setEditForm({});
+                      }} style={{...PRI('oklch(50% 0.09 155)'),width:'auto',padding:'8px 24px',fontSize:14}}>저장</button>
+                    </div>
+                  </div>
+                );
+                return (
+                  <div key={s.id} style={{display:'grid',gridTemplateColumns:'1.2fr 0.8fr 1fr 0.9fr 0.6fr 0.6fr 0.7fr 1.1fr',padding:'12px 16px',borderTop:'1px solid oklch(94% 0.01 85)',fontSize:13,alignItems:'center'}}>
+                    <div style={{fontWeight:700}}>{s.name}{s.pin?' 🔒':''}</div>
+                    <div style={{color:'oklch(52% 0.02 90)'}}>{s.grade}학년</div>
+                    <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:8,height:8,borderRadius:'50%',background:c.color,flexShrink:0}}/>{c.name}</div>
+                    <div>{STAGE_NAMES[lv-1]}</div>
+                    <div>{Math.min(s.weeklyCount,4)}/4</div>
+                    <div>{s.streak||0}일</div>
+                    <div style={{color:s.checkedToday?'oklch(42% 0.07 155)':'oklch(60% 0.02 90)',fontWeight:700}}>{s.checkedToday?'완료':'미완료'}</div>
+                    <div style={{display:'flex',gap:4}}>
+                      <button onClick={()=>{setEditingId(s.id);setEditForm({name:s.name,grade:s.grade,cls:s.cls,courseId:s.courseId,goal:s.goal,points:s.points,pin:s.pin||''});}} style={{border:'none',background:'oklch(94% 0.03 155)',borderRadius:8,padding:'4px 8px',fontSize:11,color:'oklch(38% 0.08 155)',cursor:'pointer'}}>수정</button>
+                      <button onClick={()=>adminDelete(s.id)} style={{border:'none',background:'oklch(97% 0.01 15)',borderRadius:8,padding:'4px 8px',fontSize:11,color:'oklch(50% 0.12 25)',cursor:'pointer'}}>삭제</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {/* Grid view */}
+          {adminView==='grid' && (
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',gap:14}}>
+              {adminFiltered.map((s,i) => {
+                const c = courseOf(s.courseId), lv = levelOf(s.points);
+                return (
+                  <div key={s.id} style={{background:c.bg,borderRadius:20,padding:16,display:'flex',flexDirection:'column',alignItems:'center',gap:6,textAlign:'center'}}>
+                    <div style={{width:64,height:64,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                      <Char course={c} level={lv} size={48}/>
+                    </div>
+                    <div style={{fontWeight:700,fontSize:13.5}}>{s.name}</div>
+                    <div style={{fontSize:11,color:'oklch(52% 0.02 90)'}}>{s.grade}학년 {s.cls}반</div>
+                    <div style={{...PILL('white',c.dark),fontSize:11}}>{STAGE_NAMES[lv-1]}</div>
+                    <div style={{fontSize:11,fontWeight:700,color:s.checkedToday?'oklch(42% 0.07 155)':'oklch(60% 0.02 90)'}}>
+                      오늘 {s.checkedToday?'완료':'미완료'} · 이번주 {Math.min(s.weeklyCount,4)}
+                    </div>
+                    <div style={{display:'flex',gap:4,marginTop:2}}>
+                      <button onClick={()=>{setEditingId(s.id);setEditForm({name:s.name,grade:s.grade,cls:s.cls,courseId:s.courseId,goal:s.goal,points:s.points,pin:s.pin||''});setAdminView('table');}} style={{border:'none',background:'rgba(255,255,255,0.85)',borderRadius:8,padding:'3px 10px',fontSize:11,color:'oklch(38% 0.08 155)',cursor:'pointer'}}>수정</button>
+                      <button onClick={()=>adminDelete(s.id)} style={{border:'none',background:'rgba(255,255,255,0.7)',borderRadius:8,padding:'3px 10px',fontSize:11,color:'oklch(50% 0.12 25)',cursor:'pointer'}}>삭제</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ══════════════════════════════════════════════════════
+  // LOGIN SCREEN
+  // ══════════════════════════════════════════════════════
+  if (!cur && screen !== 'create') {
+    return (
+      <>
+      <div style={{...BG_STYLE,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'32px 20px',gap:16}}>
+        <div style={{...CARD,display:'flex',flexDirection:'column',alignItems:'center',gap:24,maxWidth:420,width:'100%'}}>
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:10}}>
+            <Logo size={96}/>
+            <div style={{fontFamily:'Gowun Dodum',fontSize:30,color:'oklch(38% 0.05 155)',textAlign:'center',lineHeight:1.3,fontWeight:600}}>영천초등학교<br/>도전활동 기록지</div>
+            <div style={{fontSize:14,color:'oklch(52% 0.02 90)'}}>학년을 선택해주세요</div>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:16,width:'100%'}}>
+            {/* 학년 토글 — 클릭 즉시 1반으로 자동 설정 */}
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              <div style={{fontSize:12,fontWeight:700,color:'oklch(52% 0.02 90)'}}>학년 선택</div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:6}}>
+                {[1,2,3,4,5,6].map(g=>{
+                  const active = loginGrade===String(g);
+                  return (
+                    <button key={g} onClick={()=>setLoginGrade(String(g))}
+                      style={{border:`2px solid ${active?'oklch(50% 0.09 155)':'oklch(90% 0.015 85)'}`,borderRadius:14,padding:'10px 4px',background:active?'oklch(50% 0.09 155)':'oklch(99% 0.007 85)',color:active?'white':'oklch(40% 0.02 90)',fontWeight:700,fontSize:14}}>
+                      {g}학년
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            {/* 학생 목록 */}
+            {loginGrade && loginStudents.length===0 && (
+              <div style={{display:'flex',flexDirection:'column',gap:10,textAlign:'center',padding:16,background:'oklch(99% 0.007 85)',borderRadius:16,border:'1.5px dashed oklch(90% 0.015 85)'}}>
+                <div style={{fontSize:13,color:'oklch(52% 0.02 90)'}}>해당 학년에 등록된 학생이 없어요.</div>
+                <button onClick={()=>setScreen('create')} style={PRI()}>새 프로필 만들기</button>
+              </div>
+            )}
+            {loginStudents.length>0 && (
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                <div style={{fontSize:12,fontWeight:700,color:'oklch(52% 0.02 90)'}}>이름을 선택해주세요</div>
+                {loginStudents.map(({s,i}) => {
+                  const c = courseOf(s.courseId), lv = levelOf(s.points);
+                  return (
+                    <button key={i} onClick={()=>tryLogin(i)} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',borderRadius:18,border:'2px solid oklch(90% 0.015 85)',background:'oklch(99% 0.007 85)',textAlign:'left'}}>
+                      <div style={{width:44,height:44,flexShrink:0,borderRadius:'50%',background:c.bg,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                        <Char course={c} level={lv} size={36}/>
+                      </div>
+                      <div style={{flex:1}}>
+                        <div style={{fontWeight:700,fontSize:14.5}}>{s.name}</div>
+                        <div style={{fontSize:11.5,color:c.dark}}>{s.grade}학년 · {STAGE_NAMES[lv-1]}{s.pin?' 🔒':''}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+                <button onClick={()=>setScreen('create')} style={{border:'1.5px dashed oklch(90% 0.015 85)',borderRadius:16,padding:10,background:'none',color:'oklch(52% 0.02 90)',fontSize:13,fontWeight:700}}>
+                  내 이름이 없나요? 새 프로필 만들기
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        <button onClick={()=>setAdminMode(true)} style={{border:'none',background:'none',color:'oklch(60% 0.02 90)',fontSize:11.5,textDecoration:'underline'}}>관리자 페이지</button>
+      </div>
+
+      {/* PIN 입력 모달 */}
+      {pinModal && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:50,padding:20}}>
+          <div style={{...CARD,display:'flex',flexDirection:'column',alignItems:'center',gap:20,maxWidth:320,width:'100%'}}>
+            <div style={{fontSize:18,fontWeight:800,fontFamily:'Gowun Dodum',color:'oklch(38% 0.05 155)'}}>
+              {students[pinModal.si]?.name} 학생
+            </div>
+            <div style={{fontSize:13,color:'oklch(52% 0.02 90)'}}>4자리 비밀번호를 입력하세요</div>
+            <input type="password" inputMode="numeric" maxLength={4} value={pinInput}
+              onChange={e=>{setPinInput(e.target.value.replace(/\D/g,''));setPinError('');}}
+              onKeyDown={e=>e.key==='Enter'&&confirmPin()}
+              placeholder="● ● ● ●"
+              style={{...INPUT,fontSize:24,textAlign:'center',letterSpacing:8}}
+              autoFocus/>
+            {pinError && <div style={{fontSize:12,color:'oklch(55% 0.15 25)'}}>{pinError}</div>}
+            <div style={{display:'flex',gap:10,width:'100%'}}>
+              <button onClick={()=>{setPinModal(null);setPinInput('');setPinError('');}} style={{...SEC,flex:1,border:'1px solid oklch(90% 0.015 85)',borderRadius:14,padding:12}}>취소</button>
+              <button onClick={confirmPin} style={{...PRI(),flex:2}}>확인</button>
+            </div>
+          </div>
+        </div>
+      )}
+      </>
+    );
+  }
+
+  // ══════════════════════════════════════════════════════
+  // CREATE SCREEN
+  // ══════════════════════════════════════════════════════
+  if (!cur && screen==='create') {
+    const canSubmit = newName.trim() && newCourse && newGoal.trim();
+    return (
+      <div style={{...BG_STYLE,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'32px 20px',gap:24}}>
+        <div style={{...CARD,display:'flex',flexDirection:'column',alignItems:'center',gap:20,maxWidth:460,width:'100%'}}>
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8}}>
+            <Logo size={72}/>
+            <div style={{fontFamily:'Gowun Dodum',fontSize:22,color:'oklch(38% 0.05 155)'}}>나만의 도전 캐릭터 만들기</div>
+            <div style={{fontSize:13,color:'oklch(52% 0.02 90)'}}>캐릭터와 목표를 정하면 도전을 시작할 수 있어요</div>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:16,width:'100%'}}>
+            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+              <label style={{fontSize:12,fontWeight:700,color:'oklch(52% 0.02 90)'}}>이름</label>
+              <input value={newName} onChange={e=>setNewName(e.target.value)} placeholder="이름을 입력해주세요" style={INPUT}/>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              <label style={{fontSize:12,fontWeight:700,color:'oklch(52% 0.02 90)'}}>캐릭터 도감에서 코스를 골라주세요</label>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
+                {COURSES.map(c => {
+                  const sel = newCourse===c.id;
+                  return (
+                    <button key={c.id} onClick={()=>setNewCourse(c.id)} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:6,border:`2px solid ${sel?c.color:'oklch(90% 0.015 85)'}`,borderRadius:16,padding:'10px 4px',background:sel?c.bg:'oklch(99% 0.007 85)'}}>
+                      <Char course={c} level={1} size={52}/>
+                      <div style={{fontSize:11.5,fontWeight:700}}>{c.name}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+              <label style={{fontSize:12,fontWeight:700,color:'oklch(52% 0.02 90)'}}>나의 도전 목표</label>
+              <input value={newGoal} onChange={e=>setNewGoal(e.target.value)} placeholder="매일 할 수 있는 작은 목표로 정해보세요!" style={INPUT}/>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+              <label style={{fontSize:12,fontWeight:700,color:'oklch(52% 0.02 90)'}}>비밀번호 4자리 <span style={{fontWeight:400,color:'oklch(62% 0.02 90)'}}>(선택 · 로그인 시 확인)</span></label>
+              <input type="password" inputMode="numeric" maxLength={4} value={newPin}
+                onChange={e=>setNewPin(e.target.value.replace(/\D/g,''))}
+                placeholder="숫자 4자리 (없으면 비워두세요)" style={INPUT}/>
+            </div>
+            <button onClick={saveNewStudent} disabled={!canSubmit} style={PRI(canSubmit?'oklch(50% 0.09 155)':'oklch(85% 0.01 85)')}>도전 시작하기</button>
+            <button onClick={()=>setScreen('login')} style={{...SEC,fontSize:13}}>뒤로 가기</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ══════════════════════════════════════════════════════
+  // APP SCREEN (logged in)
+  // ══════════════════════════════════════════════════════
+  const previewLevel = prevLv || level;
+  const zooCId = zCourseId || cur.courseId;
+  const zooCourse = courseOf(zooCId);
+  const zooLv = zLevel || level;
+  const nextThr = level<5 ? THRESHOLDS[level] : null;
+  const remaining = nextThr ? nextThr - cur.points : 0;
+  const growthPct = level>=5 ? 100 : Math.round(((cur.points-THRESHOLDS[level-1])/(THRESHOLDS[level]-THRESHOLDS[level-1]))*100);
+  const checkinSaved = cur.checkedToday && !editing;
+  const saveDisabled = !diary.trim() || saving;
+  const weeklyMet = cur.weeklyCount >= 4;
+  const finalReached = level >= 5;
+  const today = new Date();
+
+  const NAV = [
+    {key:'dashboard',label:'오늘의 기록',icon:'home'},
+    {key:'profile',  label:'내 도전 프로필',icon:'user'},
+    {key:'zoo',      label:'캐릭터 도감',icon:'book'},
+    {key:'award',    label:'표창장 현황',icon:'award'},
+  ];
+
+  // Grass weeks — 시작일이 오늘보다 미래일 경우 오늘 기준 8주 전부터 표시
+  const grassWeeks = [];
+  const grassFrom = new Date(Math.min(PROGRAM_START.getTime(), today.getTime()));
+  let cur2 = new Date(grassFrom);
+  cur2.setDate(cur2.getDate() - cur2.getDay());
+  cur2.setHours(0,0,0,0);
+  const grassEnd = today < PROGRAM_END ? today : PROGRAM_END;
+  while (cur2 <= grassEnd) {
+    const days = [];
+    for (let i=0;i<7;i++){
+      const d = new Date(cur2);
+      const inRange = d<=PROGRAM_END && d<=today;
+      const isT = inRange && sameDay(d,today);
+      const checked = inRange && checkins.has(todayKey(d));
+      days.push({
+        bg: !inRange ? 'transparent' : (checked ? course.color : 'oklch(93% 0.01 85)'),
+        ring: isT ? `0 0 0 2px ${course.dark} inset` : 'none',
+      });
+      cur2.setDate(cur2.getDate()+1);
+    }
+    grassWeeks.push({days});
+  }
+
+  // Month calendar
+  const monthYear = today.getFullYear(), monthM = today.getMonth();
+  const monthDays = [];
+  const mStart = new Date(monthYear, monthM, 1);
+  for (let i=0;i<mStart.getDay();i++) monthDays.push({bg:'transparent',ring:'none',stamp:'',color:'transparent'});
+  const daysInMonth = new Date(monthYear,monthM+1,0).getDate();
+  for (let day=1;day<=daysInMonth;day++){
+    const d = new Date(monthYear,monthM,day);
+    const checked = checkins.has(todayKey(d));
+    const isT = sameDay(d,today);
+    const future = d > today;
+    monthDays.push({
+      bg: checked?course.bg:(future?'oklch(97% 0.005 85)':'oklch(93% 0.01 85)'),
+      ring: isT?`0 0 0 2px ${course.dark} inset`:'none',
+      color: checked?course.dark:'oklch(62% 0.02 90)',
+      stamp: checked?'★':String(day),
+    });
+  }
+  const monthLabel = `${monthYear}년 ${monthM+1}월`;
+
+  return (
+    <div style={{...BG_STYLE,display:'flex',minHeight:'100vh'}}>
+      {/* Sidebar (desktop) */}
+      {!isMobile && (
+        <div style={{width:216,flexShrink:0,background:'oklch(99% 0.007 85)',borderRight:'1px solid oklch(90% 0.015 85)',padding:'24px 16px',display:'flex',flexDirection:'column',gap:6,position:'sticky',top:0,height:'100vh',overflowY:'auto'}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,padding:'0 8px 20px'}}>
+            <Logo size={30}/>
+            <div style={{fontFamily:'Gowun Dodum',fontWeight:700,fontSize:14,color:'oklch(38% 0.05 155)',lineHeight:1.25}}>영천초 도전활동<br/>기록지</div>
+          </div>
+          {NAV.map(n=>{
+            const active = screen===n.key;
+            const col = active ? course.dark : 'oklch(52% 0.02 90)';
+            return (
+              <button key={n.key} onClick={()=>setScreen(n.key)} style={{display:'flex',alignItems:'center',gap:10,padding:'12px 14px',borderRadius:16,border:'none',background:active?course.bg:'transparent',color:col,fontSize:14,fontWeight:700,textAlign:'left'}}>
+                <Ic n={n.icon} s={20} c={col}/> {n.label}
+              </button>
+            );
+          })}
+          <div style={{flex:1}}/>
+          <button onClick={()=>{setStudentIdx(null);setScreen('login');setCheckins(new Set());}} style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',borderRadius:14,border:'1px dashed oklch(90% 0.015 85)',background:'none',color:'oklch(52% 0.02 90)',fontSize:13}}>
+            <Ic n="switch" s={16} c="oklch(52% 0.02 90)"/> 다른 학생으로
+          </button>
+        </div>
+      )}
+
+      {/* Main area */}
+      <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',paddingBottom:isMobile?76:0}}>
+        {/* Header */}
+        <div style={{background:'oklch(99% 0.007 85)',borderBottom:'1px solid oklch(90% 0.015 85)',padding:'16px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:16,flexWrap:'wrap',position:'sticky',top:0,zIndex:10}}>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            {isMobile && <Logo size={28}/>}
+            <div style={{fontFamily:'Gowun Dodum',fontSize:18,fontWeight:800,color:'oklch(38% 0.05 155)'}}>
+              {{dashboard:'오늘의 기록',profile:'내 도전 프로필',zoo:'캐릭터 도감',award:'표창장 현황'}[screen]}
+            </div>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:12,background:course.bg,padding:'8px 16px 8px 8px',borderRadius:999}}>
+            <div style={{width:38,height:38,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center'}}><Char course={course} level={level} size={28}/></div>
+            <div style={{lineHeight:1.25}}>
+              <div style={{fontSize:13,fontWeight:800}}>{cur.name} 학생 · {cur.grade}학년 {cur.cls}반</div>
+              <div style={{fontSize:11,color:course.dark}}>{STAGE_NAMES[level-1]} · 누적 {cur.points}회 성공</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div style={{flex:1,padding:24,display:'flex',justifyContent:'center'}}>
+          <div style={{...CARD,display:'flex',flexDirection:'column',gap:20,maxWidth:1080,width:'100%',alignSelf:'flex-start'}}>
+
+            {/* ── DASHBOARD ── */}
+            {screen==='dashboard' && (
+              <div data-dashgrid="1">
+                {/* Check-in card */}
+                <div style={{...SURF,borderRadius:24,padding:22,display:'flex',flexDirection:'column',gap:14}}>
+                  <div style={{fontSize:16,fontWeight:800}}>오늘의 도전을 완료했나요?</div>
+                  <div style={{fontSize:12.5,fontWeight:700,color:course.dark,background:course.bg,padding:'8px 12px',borderRadius:12}}>오늘의 목표 · {cur.goal}</div>
+                  {checkinSaved ? (
+                    <div style={{background:'oklch(94% 0.03 155)',borderRadius:18,padding:16,display:'flex',flexDirection:'column',gap:8}}>
+                      <div style={{display:'flex',alignItems:'center',gap:8,color:'oklch(42% 0.07 155)',fontWeight:700,fontSize:14}}><Ic n="check" s={16} c="oklch(42% 0.07 155)"/> 오늘도 완료했어요!</div>
+                      <div style={{fontSize:13,color:'oklch(32% 0.02 90)',lineHeight:1.5}}><b>한 줄 기록</b> · {cur.todayDiary}</div>
+                      <button onClick={()=>{setEditing(true);setDiary(cur.todayDiary);}} style={{alignSelf:'flex-start',display:'flex',alignItems:'center',gap:6,background:'white',border:'1px solid oklch(90% 0.015 85)',borderRadius:999,padding:'6px 14px',fontSize:12,fontWeight:700,color:'oklch(42% 0.07 155)'}}>
+                        <Ic n="edit" s={12} c="oklch(42% 0.07 155)"/> 수정하기
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                      <label style={{fontSize:12,fontWeight:700,color:'oklch(52% 0.02 90)'}}>오늘의 느낀 점 (한 줄 일기)</label>
+                      <input value={diary} onChange={e=>setDiary(e.target.value)} placeholder="오늘 도전하면서 느낀 점을 한 줄로 써보세요!" style={INPUT}
+                        onKeyDown={e=>e.key==='Enter'&&!saveDisabled&&doCheckin()}/>
+                      <button onClick={doCheckin} disabled={saveDisabled} style={{...PRI(saveDisabled?'oklch(85% 0.01 85)':course.dark),marginTop:4,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                        <Ic n="check" s={16} c="white"/> {saving?'저장 중...':(cur.checkedToday?'수정 완료하기':'오늘의 도전 완료하기')}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {/* Character growth card */}
+                <div style={{...SURF,borderRadius:24,padding:22,display:'flex',flexDirection:'column',gap:14}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                    <div style={{fontSize:16,fontWeight:800}}>내 캐릭터 성장 존</div>
+                    <div style={{...PILL(course.bg,course.dark)}}>{course.name} 코스</div>
+                  </div>
+                  <div style={{display:'flex',gap:16,alignItems:'center'}}>
+                    <div style={{width:104,height:104,flexShrink:0,borderRadius:24,background:course.bg,display:'flex',alignItems:'center',justifyContent:'center',filter:previewLevel>level?'grayscale(1) opacity(0.45)':'none',animation:'ycFloat 3s ease-in-out infinite'}}>
+                      <Char course={course} level={previewLevel} size={80}/>
+                    </div>
+                    <div style={{flex:1,display:'flex',flexDirection:'column',gap:6}}>
+                      <div style={{fontSize:15,fontWeight:800}}>{STAGE_NAMES[previewLevel-1]}{previewLevel>level?' (아직 도달 전)':''}</div>
+                      <div style={{fontSize:12.5,color:'oklch(52% 0.02 90)',lineHeight:1.5}}>{STAGE_DESC[previewLevel-1]}</div>
+                    </div>
+                  </div>
+                  <div style={{display:'flex',gap:6,justifyContent:'space-between'}}>
+                    {[1,2,3,4,5].map(lv=>{
+                      const locked=lv>level, active=lv===previewLevel;
+                      const col=active?course.dark:'oklch(60% 0.02 90)';
+                      return (
+                        <button key={lv} onClick={()=>setPrevLv(lv)} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4,background:'none',border:'none',padding:4}}>
+                          <div style={{width:36,height:36,borderRadius:12,background:active?course.bg:(locked?'oklch(95% 0.01 85)':'white'),border:`2px solid ${active?course.color:'oklch(90% 0.015 85)'}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                            {locked?<Ic n="lock" s={14} c="oklch(70% 0.01 85)"/>:<Ic n="check" s={14} c={active?course.dark:course.color}/>}
+                          </div>
+                          <div style={{fontSize:10,color:col,fontWeight:700}}>{lv}단계</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div style={{background:'oklch(95% 0.04 95)',borderRadius:16,padding:'12px 14px',display:'flex',flexDirection:'column',gap:6}}>
+                    <div style={{fontSize:12.5,fontWeight:700,color:'oklch(55% 0.1 80)'}}>
+                      {level>=5?'최종 단계까지 성장했어요! 정말 대단해요 🎉':`다음 단계까지 ${remaining}회 남았어요! 주 4회 이상 실천하면 최종 단계까지 성장할 수 있어요.`}
+                    </div>
+                    <div style={{height:8,borderRadius:999,background:'oklch(90% 0.015 85)',overflow:'hidden'}}>
+                      <div style={{height:'100%',borderRadius:999,background:course.color,width:`${growthPct}%`,transition:'width 0.4s'}}/>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Achievement card (full width) */}
+                <div style={{...SURF,borderRadius:24,padding:22,display:'flex',flexDirection:'column',gap:16,gridColumn:'1/-1'}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+                    <div style={{fontSize:16,fontWeight:800}}>도전 달성 현황</div>
+                    <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+                      <div style={{display:'flex',background:'oklch(95% 0.02 85)',borderRadius:999,padding:4,gap:2}}>
+                        {[['week','주간 잔디'],['month','월간 캘린더']].map(([v,l])=>(
+                          <button key={v} onClick={()=>setAchView(v)} style={{border:'none',borderRadius:999,padding:'7px 16px',fontSize:12.5,fontWeight:700,background:achView===v?'white':'transparent',color:achView===v?course.dark:'oklch(52% 0.02 90)'}}>{l}</button>
+                        ))}
+                      </div>
+                      <div style={{...PILL(course.bg,course.dark)}}>이번주 {Math.min(cur.weeklyCount,4)}/4</div>
+                    </div>
+                  </div>
+                  <div style={{fontSize:11.5,color:'oklch(52% 0.02 90)'}}>{weeklyMet?'이번주 목표를 달성했어요! 이 기세를 이어가봐요.':'이번주 4회 이상 도전을 완료하면 캐릭터가 더 잘 자라요.'}</div>
+                  {achView==='week' && (
+                    <div style={{overflowX:'auto',paddingBottom:4}}>
+                      <div style={{display:'flex',gap:5,minWidth:'max-content'}}>
+                        {grassWeeks.map((week,wi)=>(
+                          <div key={wi} style={{display:'flex',flexDirection:'column',gap:5}}>
+                            {week.days.map((d,di)=>(
+                              <div key={di} style={{width:16,height:16,borderRadius:5,background:d.bg,boxShadow:d.ring}}/>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {achView==='month' && (
+                    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                      <div style={{fontSize:13,fontWeight:800,color:course.dark}}>{monthLabel}</div>
+                      <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:6}}>
+                        {WEEKDAY_LABELS.map(w=><div key={w} style={{textAlign:'center',fontSize:11,color:'oklch(52% 0.02 90)',fontWeight:700}}>{w}</div>)}
+                        {monthDays.map((md,i)=>(
+                          <div key={i} style={{aspectRatio:'1',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',background:md.bg,boxShadow:md.ring,fontSize:12,fontWeight:700,color:md.color}}>{md.stamp}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── PROFILE ── */}
+            {screen==='profile' && (
+              <div data-profgrid="1">
+                <div style={{background:course.bg,borderRadius:24,padding:26,display:'flex',flexDirection:'column',alignItems:'center',gap:12,textAlign:'center'}}>
+                  <div style={{width:110,height:110,borderRadius:32,background:'white',display:'flex',alignItems:'center',justifyContent:'center'}}><Char course={course} level={level} size={90}/></div>
+                  <div style={{fontSize:20,fontWeight:800}}>{cur.name}</div>
+                  <div style={{fontSize:13,color:course.dark}}>{cur.grade}학년 {cur.cls}반 · {course.name} 코스</div>
+                  <div style={{...PILL('white',course.dark),fontSize:12,padding:'5px 14px'}}>{STAGE_NAMES[level-1]}</div>
+                  <div style={{fontSize:11.5,color:'oklch(52% 0.02 90)',marginTop:6}}>2026.08.27 부터 함께 도전 중</div>
+                  <div style={{fontSize:11,color:'oklch(52% 0.02 90)',background:'white',borderRadius:12,padding:'8px 12px',lineHeight:1.5}}>코스는 학기 중에는 바꿀 수 없어요. 끝까지 함께 키워봐요!</div>
+                </div>
+                <div style={{display:'flex',flexDirection:'column',gap:16}}>
+                  <div data-statgrid="1">
+                    {[
+                      {label:'누적 성공 횟수',value:`${cur.points}회`},
+                      {label:'연속 도전',value:`${cur.streak||0}일`},
+                      {label:'이번주 진행',value:`${Math.min(cur.weeklyCount,4)}/4`},
+                      {label:'현재 단계',value:`${level} / 5단계`},
+                    ].map(stat=>(
+                      <div key={stat.label} style={{...SURF,borderRadius:18,padding:16,display:'flex',flexDirection:'column',gap:4}}>
+                        <div style={{fontSize:11.5,color:'oklch(52% 0.02 90)',fontWeight:700}}>{stat.label}</div>
+                        <div style={{fontFamily:'Gowun Dodum',fontSize:22,fontWeight:800,color:course.dark}}>{stat.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{...SURF,borderRadius:20,padding:18,display:'flex',flexDirection:'column',gap:12}}>
+                    <div style={{fontSize:14.5,fontWeight:800}}>지난 도전 일기</div>
+                    {(cur.diaryHistory||[]).length===0 && <div style={{fontSize:13,color:'oklch(62% 0.02 90)'}}>아직 기록이 없어요. 오늘 첫 체크인을 해보세요!</div>}
+                    {(cur.diaryHistory||[]).slice(0,10).map((entry,i)=>(
+                      <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:'1px solid oklch(94% 0.01 85)'}}>
+                        <div style={{fontSize:11.5,fontWeight:700,color:'oklch(52% 0.02 90)',flexShrink:0,width:64}}>{entry.date}</div>
+                        <div style={{fontSize:13,lineHeight:1.5}}>{entry.text}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── ZOO ── */}
+            {screen==='zoo' && (
+              <div data-zoogrid="1">
+                <div style={{...SURF,borderRadius:24,padding:20,display:'flex',flexDirection:'column',gap:16}}>
+                  <div style={{fontSize:16,fontWeight:800}}>캐릭터 도감</div>
+                  {COURSES.map(zc=>{
+                    const isOwn = zc.id===cur.courseId;
+                    return (
+                      <div key={zc.id} style={{display:'flex',flexDirection:'column',gap:8}}>
+                        <button onClick={()=>{setZCourseId(zc.id);setZLevel(isOwn?level:1);}} style={{display:'flex',alignItems:'center',gap:8,background:'none',border:'none',padding:0,alignSelf:'flex-start'}}>
+                          <div style={{width:10,height:10,borderRadius:'50%',background:zc.color}}/>
+                          <div style={{fontSize:13.5,fontWeight:800,color:zooCId===zc.id?zc.dark:'oklch(40% 0.02 90)'}}>{zc.name} 코스</div>
+                        </button>
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:8}}>
+                          {[1,2,3,4,5].map(lv=>{
+                            const unlocked = isOwn && lv<=level;
+                            const selected = zc.id===zooCId && lv===zooLv;
+                            return (
+                              <button key={lv} onClick={()=>{setZCourseId(zc.id);setZLevel(lv);}} style={{border:`2px solid ${selected?zc.color:'oklch(90% 0.015 85)'}`,borderRadius:16,padding:'8px 4px',background:selected?zc.bg:'oklch(99% 0.005 85)',display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+                                <div style={{width:44,height:44,display:'flex',alignItems:'center',justifyContent:'center',filter:unlocked?'none':'grayscale(1)'}}>
+                                  {unlocked?<Char course={zc} level={lv} size={40}/>:<Ic n="lock" s={22} c="oklch(58% 0.015 85)"/>}
+                                </div>
+                                <div style={{fontSize:9.5,fontWeight:700,color:unlocked?'oklch(40% 0.02 90)':'oklch(70% 0.01 85)'}}>{STAGE_NAMES[lv-1]}</div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{background:(zooCId===cur.courseId&&zooLv<=level)?zooCourse.bg:'oklch(96% 0.005 85)',borderRadius:24,padding:24,display:'flex',flexDirection:'column',alignItems:'center',gap:12,textAlign:'center',justifyContent:'center',minHeight:200}}>
+                  {zooCId===cur.courseId&&zooLv<=level ? (
+                    <>
+                      <div style={{animation:'ycPop 0.25s ease'}}><Char course={zooCourse} level={zooLv} size={130}/></div>
+                      <div style={{fontSize:17,fontWeight:800}}>{zooCourse.name} · {STAGE_NAMES[zooLv-1]}</div>
+                      <div style={{fontSize:12.5,color:'oklch(52% 0.02 90)',lineHeight:1.6,maxWidth:260}}>{STAGE_DESC[zooLv-1]}</div>
+                    </>
+                  ) : (
+                    <>
+                      <Ic n="lock" s={60} c="oklch(58% 0.015 85)"/>
+                      <div style={{fontSize:17,fontWeight:800}}>아직 잠겨있어요</div>
+                      <div style={{fontSize:12.5,color:'oklch(52% 0.02 90)',lineHeight:1.6,maxWidth:260}}>내 코스에서 꾸준히 도전을 완료하면 새로운 친구를 만날 수 있어요.</div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── AWARD ── */}
+            {screen==='award' && (
+              <div style={{display:'flex',justifyContent:'center',padding:'20px 0'}}>
+                <div style={{width:'100%',maxWidth:460,background:'oklch(99% 0.007 85)',borderRadius:28,border:`3px solid ${finalReached?GOLD:'oklch(90% 0.015 85)'}`,padding:32,display:'flex',flexDirection:'column',alignItems:'center',gap:14,textAlign:'center',filter:finalReached?'none':'grayscale(0.6) opacity(0.7)'}}>
+                  <Ic n="award" s={80} c={finalReached?GOLD_DARK:'oklch(75% 0.01 85)'}/>
+                  <div style={{fontSize:12,fontWeight:700,color:'oklch(55% 0.1 80)',letterSpacing:2}}>CERTIFICATE OF ACHIEVEMENT</div>
+                  <div style={{fontFamily:'Gowun Dodum',fontSize:22,fontWeight:800,color:'oklch(38% 0.05 155)'}}>{finalReached?`${cur.name} 학생`:'아직 표창장이 없어요'}</div>
+                  <div style={{fontSize:14,lineHeight:1.7,color:'oklch(32% 0.02 90)'}}>
+                    {finalReached
+                      ? '위 학생은 2026학년도 도전활동 기간 동안 꾸준히 도전을 실천하여 최종 단계까지 성장하였으므로 이 표창장을 드립니다.'
+                      : `최종 단계까지 ${60-cur.points}회 남았어요. 주 4회 이상 꾸준히 도전을 완료하면 표창장을 받을 수 있어요!`}
+                  </div>
+                  {finalReached && <div style={{fontSize:12,color:'oklch(52% 0.02 90)',marginTop:6}}>2026년 12월 24일</div>}
+                  <div style={{fontSize:12,fontWeight:800,color:'oklch(38% 0.05 155)'}}>영천초등학교장</div>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom tab (mobile) */}
+      {isMobile && (
+        <div style={{position:'fixed',bottom:0,left:0,right:0,background:'oklch(99% 0.007 85)',borderTop:'1px solid oklch(90% 0.015 85)',display:'flex',justifyContent:'space-around',padding:'8px 4px',zIndex:20}}>
+          {NAV.map(n=>{
+            const active = screen===n.key;
+            const col = active ? course.dark : 'oklch(52% 0.02 90)';
+            return (
+              <button key={n.key} onClick={()=>setScreen(n.key)} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,background:'none',border:'none',padding:'6px 10px',color:col}}>
+                <Ic n={n.icon} s={22} c={col}/>
+                <span style={{fontSize:10.5,fontWeight:700}}>{n.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
